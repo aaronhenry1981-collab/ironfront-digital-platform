@@ -1,0 +1,37 @@
+name: Deploy to Iron Front Digital
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
+          aws-region: us-east-2
+
+      - name: Deploy via SSM
+        run: |
+          aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids i-0160b2a838a432bbc \
+            --document-name AWS-RunShellScript \
+            --parameters commands="[
+              \"set -e\",
+              \"cd /tmp\",
+              \"rm -rf ironfront-digital-platform || true\",
+              \"git clone https://github.com/${{ github.repository }}.git ironfront-digital-platform\",
+              \"cd /opt/ifd-app\",
+              \"cp -r /tmp/ironfront-digital-platform/app/* .\",
+              \"/opt/ifd-deploy/deploy.sh\"
+            ]"
