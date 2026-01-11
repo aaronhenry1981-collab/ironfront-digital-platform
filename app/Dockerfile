@@ -9,6 +9,8 @@ ENV PORT=3000
 ENV APP_VERSION=unknown
 
 COPY package.json ./package.json
+RUN npm install --production
+
 COPY server.js ./server.js
 
 EXPOSE 3000

@@ -1,16 +1,20 @@
 import http from "http";
 import fs from "fs";
 import crypto from "crypto";
+import Stripe from "stripe";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const VERSION = process.env.APP_VERSION || "unknown";
-const ADMIN_KEY = process.env.ADMIN_KEY || "change-me";
+const ADMIN_KEY = process.env.ADMIN_KEY;
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || null;
+
+const stripe = STRIPE_KEY ? new Stripe(STRIPE_KEY) : null;
 const LEADS_FILE = "/tmp/ifd-leads.json";
 
 if (!fs.existsSync(LEADS_FILE)) fs.writeFileSync(LEADS_FILE, "[]");
 
 const readLeads = () => JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
-const writeLeads = (leads) => fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+const writeLeads = (l) => fs.writeFileSync(LEADS_FILE, JSON.stringify(l, null, 2));
 
 const page = (title, body) => `<!doctype html>
 <html><head><meta charset="utf-8"/><title>${title}</title></head>
@@ -28,10 +32,8 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/ready")
     return json(res, { ready: true, version: VERSION });
 
-  // Admin guard
   if (url.pathname.startsWith("/admin")) {
-    const key = req.headers["x-admin-key"];
-    if (key !== ADMIN_KEY) {
+    if (req.headers["x-admin-key"] !== ADMIN_KEY) {
       res.writeHead(403);
       return res.end("Forbidden");
     }
@@ -42,55 +44,59 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === "/admin/export") {
     const leads = readLeads();
-    const csv = ["email,source,timestamp"].concat(
-      leads.map(l => `${l.email},${l.source},${l.ts}`)
-    ).join("\n");
+    const csv = ["email,source,stripe_customer,timestamp"]
+      .concat(leads.map(l => `${l.email},${l.source},${l.stripeId||""},${l.ts}`))
+      .join("\n");
     res.writeHead(200, { "Content-Type": "text/csv" });
     return res.end(csv);
   }
 
-  if (url.pathname === "/admin/clear" && req.method === "POST") {
-    writeLeads([]);
-    return json(res, { cleared: true });
-  }
-
-  if (url.pathname === "/submit" && req.method === "POST") {
+  if (url.pathname === "/apply" && req.method === "POST") {
     let body = "";
     req.on("data", c => body += c);
-    req.on("end", () => {
+    req.on("end", async () => {
       const data = new URLSearchParams(body);
+      const email = data.get("email");
+      const source = data.get("source");
+
+      let stripeId = null;
+      if (stripe) {
+        const customer = await stripe.customers.create({
+          email,
+          metadata: { source, version: VERSION }
+        });
+        stripeId = customer.id;
+      }
+
       const leads = readLeads();
       leads.push({
         id: crypto.randomUUID(),
-        email: data.get("email"),
-        source: data.get("source"),
+        email,
+        source,
+        stripeId,
         ts: new Date().toISOString()
       });
       writeLeads(leads);
-      return html(res, page("Received", "<h1>Request received</h1>"));
+
+      return html(res, page("Application Received", `
+        <h1>Application Received</h1>
+        <p>Our team will review and follow up.</p>
+      `));
     });
     return;
   }
 
-  if (url.pathname === "/mlm")
-    return html(res, page("MLM", `
-      <h1>Scale Your MLM</h1>
-      <form method="POST" action="/submit">
-        <input type="hidden" name="source" value="mlm"/>
-        <input name="email" required placeholder="Email"/>
-        <button>Request Access</button>
+  if (url.pathname === "/mlm" || url.pathname === "/biab") {
+    const source = url.pathname.replace("/", "");
+    return html(res, page("Apply", `
+      <h1>${source === "mlm" ? "Scale Your Business" : "Start a Business"}</h1>
+      <form method="POST" action="/apply">
+        <input type="hidden" name="source" value="${source}" />
+        <input required name="email" placeholder="Email" />
+        <button>Apply</button>
       </form>
     `));
-
-  if (url.pathname === "/biab")
-    return html(res, page("BIAB", `
-      <h1>Start a Business</h1>
-      <form method="POST" action="/submit">
-        <input type="hidden" name="source" value="biab"/>
-        <input name="email" required placeholder="Email"/>
-        <button>Request Access</button>
-      </form>
-    `));
+  }
 
   return html(res, page("Iron Front Digital", `
     <h1>Build. Scale. Operate.</h1>

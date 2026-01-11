@@ -1,5 +1,8 @@
 {
   "name": "ifd-app",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "stripe": "^14.21.0"
+  }
 }
