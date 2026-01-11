@@ -39,15 +39,14 @@ fi
 echo "[deploy] starting staged container on :${PORT_STAGE}"
 docker rm -f "${STAGE_NAME}" >/dev/null 2>&1 || true
 
-ENV_FILE_ARG=""
+ENV_ARGS=(-e "APP_VERSION=${GIT_SHA}")
 if [[ -f "${APP_DIR}/.env" ]]; then
-  ENV_FILE_ARG="--env-file ${APP_DIR}/.env"
+  ENV_ARGS+=(--env-file "${APP_DIR}/.env")
 fi
 
 docker run -d --name "${STAGE_NAME}" \
   -p "${PORT_STAGE}:3000" \
-  -e "APP_VERSION=${GIT_SHA}" \
-  ${ENV_FILE_ARG} \
+  "${ENV_ARGS[@]}" \
   --restart unless-stopped \
   "${IMAGE_TAG}" >/dev/null
 
@@ -73,10 +72,14 @@ if [[ -n "${OLD_CONTAINER_ID}" ]]; then
   docker rm "${APP_NAME}" >/dev/null || true
 fi
 
+ENV_ARGS=(-e "APP_VERSION=${GIT_SHA}")
+if [[ -f "${APP_DIR}/.env" ]]; then
+  ENV_ARGS+=(--env-file "${APP_DIR}/.env")
+fi
+
 docker run -d --name "${APP_NAME}" \
   -p "${PORT_MAIN}:3000" \
-  -e "APP_VERSION=${GIT_SHA}" \
-  ${ENV_FILE_ARG} \
+  "${ENV_ARGS[@]}" \
   --restart unless-stopped \
   "${IMAGE_TAG}" >/dev/null
 
@@ -88,9 +91,13 @@ if ! curl -fsS "http://127.0.0.1:${PORT_MAIN}/health" >/dev/null; then
 
   if [[ -n "${OLD_IMAGE_ID}" ]]; then
     echo "[deploy] rolling back to previous image ${OLD_IMAGE_ID}"
+    ENV_ARGS_ROLLBACK=()
+    if [[ -f "${APP_DIR}/.env" ]]; then
+      ENV_ARGS_ROLLBACK+=(--env-file "${APP_DIR}/.env")
+    fi
     docker run -d --name "${APP_NAME}" \
       -p "${PORT_MAIN}:3000" \
-      ${ENV_FILE_ARG} \
+      "${ENV_ARGS_ROLLBACK[@]}" \
       --restart unless-stopped \
       "${OLD_IMAGE_ID}" >/dev/null
     curl -fsS "http://127.0.0.1:${PORT_MAIN}/health" >/dev/null && echo "[deploy] rollback healthy" || true
