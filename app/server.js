@@ -1,7 +1,18 @@
 import http from "http";
+import fs from "fs";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const VERSION = process.env.APP_VERSION || "unknown";
+const LEADS_FILE = "/tmp/ifd-leads.json";
+
+if (!fs.existsSync(LEADS_FILE)) fs.writeFileSync(LEADS_FILE, "[]");
+
+const readLeads = () => JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
+const saveLead = (lead) => {
+  const leads = readLeads();
+  leads.push({ ...lead, ts: new Date().toISOString() });
+  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+};
 
 const page = (title, body) => `<!doctype html>
 <html>
@@ -10,102 +21,79 @@ const page = (title, body) => `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${title}</title>
 <style>
-body{margin:0;background:#0b0b0d;color:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto}
-.wrap{max-width:1080px;margin:60px auto;padding:0 24px}
-h1{font-size:46px;margin:0 0 12px}
-h2{font-size:28px;margin:0 0 10px}
-p{font-size:16px;opacity:.9;line-height:1.6}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
-.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px;background:rgba(255,255,255,.03)}
-a.btn{display:inline-block;margin-top:18px;padding:14px 22px;border-radius:12px;background:#ff7a18;color:#000;text-decoration:none;font-weight:600}
+body{margin:0;background:#0b0b0d;color:#eaeaea;font-family:system-ui}
+.wrap{max-width:960px;margin:60px auto;padding:0 24px}
+h1{font-size:44px;margin:0 0 12px}
+p{font-size:16px;opacity:.9}
+form{margin-top:24px}
+input{padding:12px;border-radius:10px;border:none;width:100%;max-width:420px}
+button{margin-top:14px;padding:12px 20px;border-radius:10px;border:none;background:#ff7a18;font-weight:600}
 .small{opacity:.6;font-size:13px;margin-top:28px}
-@media(max-width:800px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
 ${body}
-<div class="small">Iron Front Digital • Version ${VERSION}</div>
+<div class="small">Iron Front Digital • ${VERSION}</div>
 </div>
 </body>
 </html>`;
 
 const server = http.createServer((req, res) => {
-  const url = req.url || "/";
+  const url = new URL(req.url, "http://localhost");
 
-  if (url === "/health")
+  if (url.pathname === "/health")
     return json(res, { ok: true, version: VERSION });
 
-  if (url === "/ready")
+  if (url.pathname === "/ready")
     return json(res, { ready: true, version: VERSION });
 
-  if (url === "/mlm")
-    return html(res, page("Scale Your MLM", `
+  if (url.pathname === "/admin/leads")
+    return json(res, readLeads());
+
+  if (url.pathname === "/submit" && req.method === "POST") {
+    let body = "";
+    req.on("data", (c) => body += c);
+    req.on("end", () => {
+      const data = new URLSearchParams(body);
+      saveLead({
+        email: data.get("email"),
+        source: data.get("source")
+      });
+      return html(res, page("Received", `
+        <h1>Request Received</h1>
+        <p>We'll be in touch shortly.</p>
+      `));
+    });
+    return;
+  }
+
+  if (url.pathname === "/mlm")
+    return html(res, page("Scale MLM", `
       <h1>Scale Your Existing Business</h1>
-      <p>
-        Iron Front Digital provides infrastructure, automation, lead systems,
-        and operational tooling for established MLM and network marketing
-        businesses.
-      </p>
-      <p>
-        This is not a new MLM. We power <strong>your</strong> brand, your team,
-        and your compensation structure — while removing operational friction.
-      </p>
-      <a class="btn" href="/request-access">Request Access</a>
+      <p>Infrastructure, automation, and systems for established MLM leaders.</p>
+      <form method="POST" action="/submit">
+        <input type="hidden" name="source" value="mlm" />
+        <input required type="email" name="email" placeholder="Your email" />
+        <button>Request Access</button>
+      </form>
     `));
 
-  if (url === "/biab")
+  if (url.pathname === "/biab")
     return html(res, page("Start a Business", `
-      <h1>Start a Business — The Right Way</h1>
-      <p>
-        Our Business-in-a-Box program is designed for individuals who want
-        ownership, structure, and real systems — without guessing or duct tape.
-      </p>
-      <p>
-        You'll build a legitimate business with guidance, infrastructure,
-        and a clear path to scaling.
-      </p>
-      <a class="btn" href="/request-access">Request Access</a>
-    `));
-
-  if (url === "/request-access")
-    return html(res, page("Request Access", `
-      <h1>Request Early Access</h1>
-      <p>
-        We're onboarding in controlled phases to maintain quality.
-      </p>
-      <p>
-        Email collection and onboarding flow is opening shortly.
-      </p>
-      <p><strong>Status:</strong> Applications opening soon.</p>
+      <h1>Start a Business</h1>
+      <p>Structured ownership with real systems and guidance.</p>
+      <form method="POST" action="/submit">
+        <input type="hidden" name="source" value="biab" />
+        <input required type="email" name="email" placeholder="Your email" />
+        <button>Request Access</button>
+      </form>
     `));
 
   return html(res, page("Iron Front Digital", `
     <h1>Build. Scale. Operate.</h1>
-    <p>
-      Iron Front Digital builds and operates infrastructure for modern
-      business owners — from network marketing leaders to first-time founders.
-    </p>
-
-    <div class="grid">
-      <div class="card">
-        <h2>I Have an Existing Business</h2>
-        <p>
-          I'm already operating an MLM or network marketing organization
-          and want better systems, automation, and scale.
-        </p>
-        <a class="btn" href="/mlm">Continue</a>
-      </div>
-
-      <div class="card">
-        <h2>I Want to Start a Business</h2>
-        <p>
-          I'm looking for a structured way to build a real business with
-          support, systems, and a growth path.
-        </p>
-        <a class="btn" href="/biab">Continue</a>
-      </div>
-    </div>
+    <p>Select your path:</p>
+    <p><a href="/mlm">Existing MLM Business</a> • <a href="/biab">Start a Business</a></p>
   `));
 });
 
@@ -120,5 +108,5 @@ function html(res, body) {
 }
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`[ifd] live on ${PORT} (${VERSION})`);
+  console.log(`[ifd] live ${PORT} (${VERSION})`);
 });
