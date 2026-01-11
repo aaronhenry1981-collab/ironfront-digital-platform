@@ -2,7 +2,7 @@ name: Deploy to Iron Front Digital
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
 
 permissions:
   id-token: write
@@ -12,26 +12,39 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
+      - name: Configure AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
           aws-region: us-east-2
 
       - name: Deploy via SSM
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          REPO: aaronhenry1981-collab/ironfront-digital-platform
+          SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
           aws ssm send-command \
             --region us-east-2 \
-            --instance-ids i-0160b2a838a432bbc \
-            --document-name AWS-RunShellScript \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
             --parameters commands="[
-              \"set -e\",
+              \"set -euo pipefail\",
+              \"sudo mkdir -p /opt/ifd-app /opt/ifd-deploy\",
+              \"sudo chown -R ec2-user:ec2-user /opt/ifd-app /opt/ifd-deploy\",
               \"cd /tmp\",
               \"rm -rf ironfront-digital-platform || true\",
-              \"git clone https://github.com/${{ github.repository }}.git ironfront-digital-platform\",
+              \"git clone https://github.com/$REPO.git ironfront-digital-platform\",
+              \"cd ironfront-digital-platform\",
+              \"rsync -a --delete app/ /opt/ifd-app/\",
+              \"rsync -a --delete deploy/ /opt/ifd-deploy/\",
+              \"chmod +x /opt/ifd-deploy/deploy.sh\",
               \"cd /opt/ifd-app\",
-              \"cp -r /tmp/ironfront-digital-platform/app/* .\",
-              \"/opt/ifd-deploy/deploy.sh\"
-            ]"
+              \"APP_VERSION=$SHA /opt/ifd-deploy/deploy.sh\"
+            ]" \
+            --comment "IFD deploy $SHA" \
+            --output text

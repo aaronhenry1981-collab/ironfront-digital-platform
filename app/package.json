@@ -1,6 +1,5 @@
 {
   "name": "ifd-app",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "server.js"
+  "private": true,
+  "type": "module"
 }
