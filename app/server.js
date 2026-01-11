@@ -16,11 +16,17 @@ if (!fs.existsSync(LEADS_FILE)) fs.writeFileSync(LEADS_FILE, "[]");
 const readLeads = () => JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
 const writeLeads = (l) => fs.writeFileSync(LEADS_FILE, JSON.stringify(l, null, 2));
 
+function classify(source) {
+  if (source === "mlm") return { tier: "MLM Platform", pricing: "Revenue-share (10%)", note: "Systems + automation for existing orgs" };
+  if (source === "biab") return { tier: "BIAB Starter", pricing: "$100–$1,500 / month", note: "Guided business build with upgrade path" };
+  return { tier: "Franchise Candidate", pricing: "$10,000 license + royalties", note: "Limited partner access" };
+}
+
 const page = (title, body) => `<!doctype html>
 <html><head><meta charset="utf-8"/><title>${title}</title></head>
 <body style="background:#0b0b0d;color:#eaeaea;font-family:sans-serif;padding:40px">
 ${body}
-<div style="opacity:.6;margin-top:30px">Version ${VERSION}</div>
+<div style="opacity:.6;margin-top:30px">Iron Front Digital • v${VERSION}</div>
 </body></html>`;
 
 const server = http.createServer((req, res) => {
@@ -42,15 +48,6 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/admin/leads")
     return json(res, readLeads());
 
-  if (url.pathname === "/admin/export") {
-    const leads = readLeads();
-    const csv = ["email,source,stripe_customer,timestamp"]
-      .concat(leads.map(l => `${l.email},${l.source},${l.stripeId||""},${l.ts}`))
-      .join("\n");
-    res.writeHead(200, { "Content-Type": "text/csv" });
-    return res.end(csv);
-  }
-
   if (url.pathname === "/apply" && req.method === "POST") {
     let body = "";
     req.on("data", c => body += c);
@@ -58,12 +55,13 @@ const server = http.createServer((req, res) => {
       const data = new URLSearchParams(body);
       const email = data.get("email");
       const source = data.get("source");
+      const classification = classify(source);
 
       let stripeId = null;
       if (stripe) {
         const customer = await stripe.customers.create({
           email,
-          metadata: { source, version: VERSION }
+          metadata: { source, tier: classification.tier }
         });
         stripeId = customer.id;
       }
@@ -73,6 +71,7 @@ const server = http.createServer((req, res) => {
         id: crypto.randomUUID(),
         email,
         source,
+        tier: classification.tier,
         stripeId,
         ts: new Date().toISOString()
       });
@@ -80,6 +79,9 @@ const server = http.createServer((req, res) => {
 
       return html(res, page("Application Received", `
         <h1>Application Received</h1>
+        <p><strong>Recommended Path:</strong> ${classification.tier}</p>
+        <p><strong>Pricing Model:</strong> ${classification.pricing}</p>
+        <p>${classification.note}</p>
         <p>Our team will review and follow up.</p>
       `));
     });
@@ -100,6 +102,7 @@ const server = http.createServer((req, res) => {
 
   return html(res, page("Iron Front Digital", `
     <h1>Build. Scale. Operate.</h1>
+    <p>Select your path:</p>
     <p><a href="/mlm">Existing Business</a> • <a href="/biab">Start a Business</a></p>
   `));
 });
