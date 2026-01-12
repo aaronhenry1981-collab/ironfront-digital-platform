@@ -1,8 +1,9 @@
-name: Deploy to Iron Front Digital
+name: Deploy to Iron Front Digital (Prod)
 
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch: {}
 
 permissions:
   id-token: write
@@ -11,6 +12,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,8 +36,8 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters commands="[
               \"set -euo pipefail\",
-              \"sudo mkdir -p /opt/ifd-app /opt/ifd-deploy\",
-              \"sudo chown -R ec2-user:ec2-user /opt/ifd-app /opt/ifd-deploy\",
+              \"sudo mkdir -p /opt/ifd-app /opt/ifd-deploy /opt/ifd-data\",
+              \"sudo chown -R ec2-user:ec2-user /opt/ifd-app /opt/ifd-deploy /opt/ifd-data\",
               \"cd /tmp\",
               \"rm -rf ironfront-digital-platform || true\",
               \"git clone https://github.com/$REPO.git ironfront-digital-platform\",
@@ -46,5 +48,5 @@ jobs:
               \"cd /opt/ifd-app\",
               \"APP_VERSION=$SHA /opt/ifd-deploy/deploy.sh\"
             ]" \
-            --comment "IFD deploy $SHA" \
+            --comment "IFD prod deploy $SHA" \
             --output text

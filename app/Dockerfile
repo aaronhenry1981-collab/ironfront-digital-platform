@@ -1,18 +1,17 @@
 FROM node:20.11.1-alpine3.19
 
-RUN apk add --no-cache dumb-init curl
+RUN apk add --no-cache dumb-init curl python3 make g++ sqlite-libs
 
 WORKDIR /app
-
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV APP_VERSION=unknown
+ENV APP_VERSION=missing
+ENV DB_PATH=/data/ifd.db
 
 COPY package.json ./package.json
-RUN npm install --production
+RUN npm install --omit=dev
 
 COPY server.js ./server.js
-
 EXPOSE 3000
 
 HEALTHCHECK --interval=10s --timeout=2s --retries=6 CMD curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1
