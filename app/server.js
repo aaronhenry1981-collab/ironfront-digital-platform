@@ -188,7 +188,20 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", "http://localhost");
 
   if (url.pathname === "/health") return json(res, 200, { ok: true, version: VERSION });
-  if (url.pathname === "/ready") return json(res, 200, { ready: true, version: VERSION });
+  
+  if (url.pathname === "/ready") {
+    // /ready checks database connection (for deployment gates)
+    try {
+      // Test database connection by running a simple query
+      db.prepare("SELECT 1").get();
+      return json(res, 200, { ok: true, db: "ok", version: VERSION });
+    } catch (e) {
+      // Database connection failed
+      res.writeHead(503);
+      return res.end(JSON.stringify({ ok: false, db: "error", version: VERSION }));
+    }
+  }
+  
   if (url.pathname === "/version") return json(res, 200, { version: VERSION });
 
   // ----- Admin -----

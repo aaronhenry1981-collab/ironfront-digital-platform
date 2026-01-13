@@ -2,6 +2,11 @@
   "name": "ifd-app",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "db:migrate": "node -e \"console.log('SQLite migrations run automatically on server start')\"",
+    "db:seed": "node -e \"console.log('Seed data managed separately')\""
+  },
   "dependencies": {
     "stripe": "14.21.0",
     "better-sqlite3": "9.6.0"

@@ -1,0 +1,175 @@
+// Prisma schema for Operator UI
+// PostgreSQL as system of record
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Org {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.Text
+  timezone  String   @default("America/New_York") @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  memberships    OrgMembership[]
+  participants   Participant[]
+  relationships  Relationship[]
+  events         Event[]
+  interventions  Intervention[]
+  recommendations Recommendation[]
+  leads          Lead[]
+
+  @@map("orgs")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.Citext
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  memberships      OrgMembership[]
+  operator_interventions Intervention[] @relation("OperatorInterventions")
+  reverser_interventions Intervention[] @relation("ReverserInterventions")
+  actor_events     Event[] @relation("ActorEvents")
+
+  @@map("users")
+}
+
+model OrgMembership {
+  id        String   @id @default(uuid()) @db.Uuid
+  org_id    String   @db.Uuid
+  user_id   String   @db.Uuid
+  role      String   @db.Text // 'owner', 'operator', 'observer'
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  org  Org  @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([org_id, user_id])
+  @@map("org_memberships")
+}
+
+model Participant {
+  id              String    @id @default(uuid()) @db.Uuid
+  org_id          String    @db.Uuid
+  email           String?   @db.Citext
+  display_name    String?   @db.Text
+  role            String    @db.Text // 'participant', 'operator', 'observer', 'system_participant'
+  origin          String    @db.Text
+  lifecycle_stage String    @db.Text // 'invited', 'activating', 'onboarding', 'producing', 'dormant', 'exited'
+  last_activity_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  org              Org            @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  from_relationships Relationship[] @relation("FromParticipant")
+  to_relationships   Relationship[] @relation("ToParticipant")
+
+  @@index([org_id, last_activity_at])
+  @@index([org_id, role])
+  @@map("participants")
+}
+
+model Relationship {
+  id               String    @id @default(uuid()) @db.Uuid
+  org_id           String    @db.Uuid
+  from_participant_id String @db.Uuid
+  to_participant_id   String @db.Uuid
+  type             String    @db.Text // 'introduced', 'mentored', 'activated'
+  source           String    @db.Text
+  confidence_score Int       @default(50)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  org            Org        @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  from_participant Participant @relation("FromParticipant", fields: [from_participant_id], references: [id], onDelete: Cascade)
+  to_participant   Participant @relation("ToParticipant", fields: [to_participant_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id, from_participant_id])
+  @@index([org_id, to_participant_id])
+  @@map("relationships")
+}
+
+model Event {
+  id            String    @id @default(uuid()) @db.Uuid
+  org_id        String    @db.Uuid
+  actor_user_id String?   @db.Uuid
+  actor_role    String    @db.Text
+  event_type    String    @db.Text
+  target_type   String    @db.Text
+  target_id     String?   @db.Uuid
+  metadata      Json?     @db.JsonB
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  org       Org   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  actor_user User? @relation("ActorEvents", fields: [actor_user_id], references: [id], onDelete: SetNull)
+
+  @@index([org_id, created_at])
+  @@index([org_id, event_type, created_at])
+  @@map("events")
+}
+
+model Intervention {
+  id                 String    @id @default(uuid()) @db.Uuid
+  org_id             String    @db.Uuid
+  operator_user_id   String    @db.Uuid
+  operator_role      String    @db.Text
+  type               String    @db.Text
+  scope              String    @db.Text // 'node', 'segment'
+  target_ids         Json      @db.JsonB
+  reason             String    @db.Text
+  previous_state     Json?     @db.JsonB
+  new_state          Json?     @db.JsonB
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  reversed_at        DateTime? @db.Timestamptz(6)
+  reversed_by_user_id String?  @db.Uuid
+  reversal_reason    String?   @db.Text
+
+  org              Org   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  operator_user    User  @relation("OperatorInterventions", fields: [operator_user_id], references: [id], onDelete: Cascade)
+  reverser_user    User? @relation("ReverserInterventions", fields: [reversed_by_user_id], references: [id], onDelete: SetNull)
+
+  @@index([org_id, created_at])
+  @@index([org_id, operator_user_id, created_at])
+  @@map("interventions")
+}
+
+model Recommendation {
+  id              String    @id @default(uuid()) @db.Uuid
+  org_id          String    @db.Uuid
+  target_type     String    @db.Text // 'node', 'segment'
+  target_id       String    @db.Uuid
+  suggested_action String   @db.Text
+  reason          String    @db.Text
+  confidence      Int       @db.SmallInt
+  status          String    @db.Text // 'active', 'applied', 'dismissed'
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @updatedAt @db.Timestamptz(6)
+
+  org Org @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id, status, created_at])
+  @@index([org_id, target_type, target_id])
+  @@map("recommendations")
+}
+
+model Lead {
+  id        String    @id @default(uuid()) @db.Uuid
+  org_id    String?   @db.Uuid
+  name      String?   @db.Text
+  email     String    @db.Citext
+  intent    String    @db.Text // 'scale', 'launch', 'ecosystems'
+  tier      String?   @db.Text
+  metadata  Json?     @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  org Org? @relation(fields: [org_id], references: [id], onDelete: SetNull)
+
+  @@index([org_id, created_at])
+  @@index([email, created_at])
+  @@map("leads")
+}
+

@@ -1,0 +1,277 @@
+# Operator UI v1
+
+Enterprise-grade business operations console for Iron Front Digital.
+
+## Features
+
+- Protected routes under `/console/*`
+- Organization Live View with real-time engagement visualization
+- Segments management
+- Interventions tracking
+- Audit log
+- Settings configuration
+- PostgreSQL persistence (Phase A4)
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- PostgreSQL (via Prisma)
+
+## Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL 16+ (or Docker)
+- npm or yarn
+
+## Local Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Start PostgreSQL
+
+**Option A: Docker (Recommended)**
+
+```bash
+docker-compose up -d
+```
+
+**Option B: Local PostgreSQL**
+
+Ensure PostgreSQL is running on `localhost:5432` with a database named `ifd_operator`.
+
+### 3. Configure Environment
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Update `DATABASE_URL` in `.env` if needed:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ifd_operator?schema=public"
+```
+
+### 4. Run Migrations
+
+```bash
+npm run db:migrate
+```
+
+This will:
+- Generate Prisma Client
+- Run database migrations
+- Create all tables and indexes
+
+### 5. Seed Database (Optional)
+
+Populate database with development data:
+
+```bash
+npm run db:seed
+```
+
+This creates:
+- 1 org (Iron Front Digital)
+- 1 operator user
+- 12 participants (including 2 system participants)
+- Relationships
+- Events
+- Recommendations
+
+### 6. Generate Prisma Client
+
+```bash
+npm run db:generate
+```
+
+### 7. Start Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Database Management
+
+### Prisma Studio
+
+View and edit database records in a GUI:
+
+```bash
+npm run db:studio
+```
+
+### Migrations
+
+Create a new migration:
+
+```bash
+npm run db:migrate
+```
+
+Apply migrations to production:
+
+```bash
+npx prisma migrate deploy
+```
+
+### Reset Database
+
+⚠️ **Warning: This deletes all data**
+
+```bash
+npx prisma migrate reset
+```
+
+## Project Structure
+
+```
+operator-ui/
+├── prisma/
+│   ├── schema.prisma      # Database schema
+│   └── seed.ts            # Seed script
+├── src/
+│   ├── app/
+│   │   ├── api/           # API routes
+│   │   └── console/       # Protected console routes
+│   ├── components/        # React components
+│   ├── lib/
+│   │   ├── db.ts          # Prisma client
+│   │   ├── auth.ts        # Authentication utilities
+│   │   ├── api.ts         # API client
+│   │   ├── audit.ts       # Audit logging
+│   │   └── repositories/  # Data access layer
+│   └── middleware.ts      # Route protection
+├── docker-compose.yml     # Local PostgreSQL
+└── .env.example           # Environment template
+```
+
+## Authentication
+
+Currently uses database-based user lookup. For production:
+
+1. Implement session-based authentication (NextAuth.js, etc.)
+2. Replace `getCurrentUser()` in `src/lib/auth.ts`
+3. Update middleware to check sessions
+
+## Org Scoping
+
+All API routes enforce org scoping:
+
+- User must have `org_membership` for the requested org
+- `org_id` from URL param is validated against user's memberships
+- Returns 403 Forbidden if user is not a member
+
+## Role-Based Access Control
+
+- **Observer**: Read-only access (graph, segments, participants, recommendations)
+- **Operator**: Full read access + can write interventions
+- **Owner**: Full access (same as operator for now)
+
+## Database Schema
+
+### Core Tables
+
+- `orgs` - Organizations
+- `users` - User accounts
+- `org_memberships` - User-org relationships with roles
+- `participants` - Organization participants
+- `relationships` - Participant relationships (edges)
+- `events` - Audit log
+- `interventions` - Operator interventions
+- `recommendations` - Atlas pattern detection recommendations
+
+See `prisma/schema.prisma` for full schema definition.
+
+## Compliance
+
+- No MLM terms
+- No recruiting language
+- No earnings/income references
+- No hierarchy visuals
+- Behavior-based, not compensation-based
+- Fully auditable
+
+## Routes
+
+### Public Routes (No Authentication Required)
+
+- `/` - Home page with intent selection
+- `/scale` - Infrastructure for existing organizations
+- `/launch` - LaunchPath™ for starting from zero
+- `/ecosystems` - Ecosystem Entry Program (EEP)
+- `/pricing` - Consolidated pricing view
+- `/apply` - Shared application form
+
+### Protected Routes (Operator Console)
+
+- `/console/organization` - Organization Live View
+- `/console/segments` - Segments management
+- `/console/interventions` - Interventions tracking
+- `/console/audit` - Audit log
+- `/console/settings` - Settings configuration
+
+## API Endpoints
+
+### Public APIs (No Authentication Required)
+
+- `POST /api/public/apply` - Submit public application
+
+### Protected APIs (Authentication Required)
+
+All endpoints require authentication and org membership:
+
+- `GET /api/orgs/[orgId]/graph` - Graph data (nodes + edges)
+- `GET /api/orgs/[orgId]/segments` - Computed segments
+- `GET /api/orgs/[orgId]/participants/[participantId]` - Participant detail
+- `GET /api/orgs/[orgId]/recommendations` - Atlas recommendations
+
+## Development Notes
+
+- All data access goes through repositories (no inline SQL)
+- Audit logging persists to `events` table
+- Engagement state is computed (not manually set)
+- Segments are computed from participant data
+- No mock data in production routes (Phase A4)
+
+## Troubleshooting
+
+### Database Connection Issues
+
+1. Check PostgreSQL is running: `docker-compose ps` (if using Docker)
+2. Verify `DATABASE_URL` in `.env`
+3. Test connection: `npx prisma db pull`
+
+### Migration Issues
+
+1. Reset database: `npx prisma migrate reset`
+2. Regenerate client: `npm run db:generate`
+3. Check schema for syntax errors
+
+### Seed Script Issues
+
+1. Ensure migrations are applied first
+2. Check for unique constraint violations
+3. Run seed again (it's idempotent with upserts)
+
+## Production Deployment
+
+1. Set `DATABASE_URL` environment variable
+2. Run migrations: `npx prisma migrate deploy`
+3. Generate Prisma Client: `npm run db:generate`
+4. Build: `npm run build`
+5. Start: `npm start`
+
+## License
+
+Private - Iron Front Digital

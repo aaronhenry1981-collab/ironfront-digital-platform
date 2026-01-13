@@ -30,7 +30,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          aws ssm send-command \
+          CMD_ID=$(aws ssm send-command \
             --region us-east-2 \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
@@ -49,4 +49,35 @@ jobs:
               \"APP_VERSION=$SHA /opt/ifd-deploy/deploy.sh\"
             ]" \
             --comment "IFD prod deploy $SHA" \
-            --output text
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Waiting for deployment to complete..."
+          sleep 10
+          
+          # Wait for command to complete
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          # Check command status
+          STATUS=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+          
+          if [[ "$STATUS" != "Success" ]]; then
+            echo "Deployment failed with status: $STATUS"
+            aws ssm get-command-invocation \
+              --region us-east-2 \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" \
+              --output json
+            exit 1
+          fi
+          
+          echo "Deployment successful"
