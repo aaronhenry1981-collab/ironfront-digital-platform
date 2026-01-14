@@ -45,9 +45,11 @@ echo ""
 
   # Check if Node.js and stripe package are available
   if command -v node &> /dev/null; then
-    # Try ES module version first, then CommonJS
+    # Try annual pricing script first (new structure), then fallback
     SCRIPT_FILE=""
-    if [[ -f "$SCRIPT_DIR/create-stripe-products-api.mjs" ]]; then
+    if [[ -f "$SCRIPT_DIR/update-stripe-products-with-annual.mjs" ]]; then
+      SCRIPT_FILE="$SCRIPT_DIR/update-stripe-products-with-annual.mjs"
+    elif [[ -f "$SCRIPT_DIR/create-stripe-products-api.mjs" ]]; then
       SCRIPT_FILE="$SCRIPT_DIR/create-stripe-products-api.mjs"
     elif [[ -f "$SCRIPT_DIR/create-stripe-products-api.js" ]]; then
       SCRIPT_FILE="$SCRIPT_DIR/create-stripe-products-api.js"
@@ -56,20 +58,45 @@ echo ""
     if [[ -n "$SCRIPT_FILE" ]]; then
       echo "Using Node.js API script..."
       # Check if stripe package exists, install if needed
-      if ! npm list stripe --prefix "$PROJECT_ROOT/app" &> /dev/null 2>&1 && \
+      # Try root directory first (for operator-ui), then app directory
+      if ! npm list stripe --prefix "$PROJECT_ROOT" &> /dev/null 2>&1 && \
+         ! [[ -f "$PROJECT_ROOT/node_modules/stripe/package.json" ]] && \
+         ! npm list stripe --prefix "$PROJECT_ROOT/app" &> /dev/null 2>&1 && \
          ! [[ -f "$PROJECT_ROOT/app/node_modules/stripe/package.json" ]]; then
         echo "Installing stripe package..."
-        cd "$PROJECT_ROOT/app"
+        cd "$PROJECT_ROOT"
         npm install stripe --save --no-package-lock 2>&1 | grep -v "npm WARN" || true
+      fi
+      
+      # Use the annual pricing script if available
+      if [[ -f "$SCRIPT_DIR/update-stripe-products-with-annual.mjs" ]]; then
+        SCRIPT_FILE="$SCRIPT_DIR/update-stripe-products-with-annual.mjs"
       fi
       
       node "$SCRIPT_FILE" > /tmp/stripe-products-output.txt 2>&1
     
-    # Extract price IDs from output
-    INDIVIDUAL=$(grep "STRIPE_PRICE_INDIVIDUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
-    BUILDER=$(grep "STRIPE_PRICE_BUILDER=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
-    ADVANCED=$(grep "STRIPE_PRICE_ADVANCED=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
-    ORGANIZATION=$(grep "STRIPE_PRICE_ORGANIZATION=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    # Extract price IDs from output (support both old and new structure)
+    INDIVIDUAL_MONTHLY=$(grep "STRIPE_PRICE_INDIVIDUAL_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    INDIVIDUAL_ANNUAL=$(grep "STRIPE_PRICE_INDIVIDUAL_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    INDIVIDUAL=$(grep "STRIPE_PRICE_INDIVIDUAL=" /tmp/stripe-products-output.txt | grep -v "_MONTHLY\|_ANNUAL" | cut -d'=' -f2 || echo "$INDIVIDUAL_MONTHLY")
+    
+    BUILDER_MONTHLY=$(grep "STRIPE_PRICE_BUILDER_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    BUILDER_ANNUAL=$(grep "STRIPE_PRICE_BUILDER_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    BUILDER=$(grep "STRIPE_PRICE_BUILDER=" /tmp/stripe-products-output.txt | grep -v "_MONTHLY\|_ANNUAL" | cut -d'=' -f2 || echo "$BUILDER_MONTHLY")
+    
+    ORGANIZATION_MONTHLY=$(grep "STRIPE_PRICE_ORGANIZATION_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    ORGANIZATION_ANNUAL=$(grep "STRIPE_PRICE_ORGANIZATION_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    ORGANIZATION=$(grep "STRIPE_PRICE_ORGANIZATION=" /tmp/stripe-products-output.txt | grep -v "_MONTHLY\|_ANNUAL" | cut -d'=' -f2 || echo "$ORGANIZATION_MONTHLY")
+    
+    STARTER_MONTHLY=$(grep "STRIPE_PRICE_STARTER_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    STARTER_ANNUAL=$(grep "STRIPE_PRICE_STARTER_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    
+    GROWTH_MONTHLY=$(grep "STRIPE_PRICE_GROWTH_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    GROWTH_ANNUAL=$(grep "STRIPE_PRICE_GROWTH_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    
+    SCALE_MONTHLY=$(grep "STRIPE_PRICE_SCALE_MONTHLY=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    SCALE_ANNUAL=$(grep "STRIPE_PRICE_SCALE_ANNUAL=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
+    
     FRANCHISE=$(grep "STRIPE_PRICE_FRANCHISE=" /tmp/stripe-products-output.txt | cut -d'=' -f2 || echo "")
     
     cat /tmp/stripe-products-output.txt
@@ -104,8 +131,9 @@ echo "Step 2: Updating .env file..."
 echo "=============================="
 echo ""
 
-if [[ -z "$INDIVIDUAL" ]] || [[ "$INDIVIDUAL" == "NOT_CREATED" ]]; then
-  echo "⚠️  Could not create all products. Please check output above."
+# Check if we got at least some price IDs
+if [[ -z "$INDIVIDUAL_MONTHLY" ]] && [[ -z "$INDIVIDUAL" ]]; then
+  echo "⚠️  Could not create products. Please check output above."
   echo "   You may need to create products manually in Stripe Dashboard."
   exit 1
 fi
@@ -133,10 +161,27 @@ update_env_var() {
   fi
 }
 
-update_env_var "STRIPE_PRICE_INDIVIDUAL" "$INDIVIDUAL"
-update_env_var "STRIPE_PRICE_BUILDER" "$BUILDER"
-update_env_var "STRIPE_PRICE_ADVANCED" "$ADVANCED"
-update_env_var "STRIPE_PRICE_ORGANIZATION" "$ORGANIZATION"
+# Update monthly prices (use monthly if available, fallback to old structure)
+if [[ -n "$INDIVIDUAL_MONTHLY" ]]; then
+  update_env_var "STRIPE_PRICE_INDIVIDUAL_MONTHLY" "$INDIVIDUAL_MONTHLY"
+  update_env_var "STRIPE_PRICE_INDIVIDUAL_ANNUAL" "$INDIVIDUAL_ANNUAL"
+  update_env_var "STRIPE_PRICE_BUILDER_MONTHLY" "$BUILDER_MONTHLY"
+  update_env_var "STRIPE_PRICE_BUILDER_ANNUAL" "$BUILDER_ANNUAL"
+  update_env_var "STRIPE_PRICE_ORGANIZATION_MONTHLY" "$ORGANIZATION_MONTHLY"
+  update_env_var "STRIPE_PRICE_ORGANIZATION_ANNUAL" "$ORGANIZATION_ANNUAL"
+  update_env_var "STRIPE_PRICE_STARTER_MONTHLY" "$STARTER_MONTHLY"
+  update_env_var "STRIPE_PRICE_STARTER_ANNUAL" "$STARTER_ANNUAL"
+  update_env_var "STRIPE_PRICE_GROWTH_MONTHLY" "$GROWTH_MONTHLY"
+  update_env_var "STRIPE_PRICE_GROWTH_ANNUAL" "$GROWTH_ANNUAL"
+  update_env_var "STRIPE_PRICE_SCALE_MONTHLY" "$SCALE_MONTHLY"
+  update_env_var "STRIPE_PRICE_SCALE_ANNUAL" "$SCALE_ANNUAL"
+else
+  # Fallback to old structure for compatibility
+  update_env_var "STRIPE_PRICE_INDIVIDUAL" "$INDIVIDUAL"
+  update_env_var "STRIPE_PRICE_BUILDER" "$BUILDER"
+  update_env_var "STRIPE_PRICE_ORGANIZATION" "$ORGANIZATION"
+fi
+
 update_env_var "STRIPE_PRICE_FRANCHISE" "$FRANCHISE"
 
 echo ""
