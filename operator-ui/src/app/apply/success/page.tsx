@@ -22,10 +22,8 @@ export default function ApplySuccessPage() {
   }, [searchParams])
 
   // Map tier to intent for the apply form
-  const getIntentFromTier = (tier: string): string => {
-    if (tier === 'starter' || tier === 'growth' || tier === 'scale') return 'launch'
-    return 'launch' // Default to launch for paid plans
-  }
+  // All LaunchPath tiers (paid) use 'launch' intent
+  const intent = 'launch'
 
   return (
     <PublicLayout>
@@ -80,7 +78,7 @@ export default function ApplySuccessPage() {
 
           <div className="text-center">
             <Link
-              href={`/apply?paid=true&intent=${getIntentFromTier(tier)}&tier=${tier}`}
+              href={`/apply?paid=true&intent=launch&tier=${tier || 'starter'}`}
               className="inline-block px-8 py-3 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors"
             >
               Continue to Application
