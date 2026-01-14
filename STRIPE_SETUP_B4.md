@@ -25,116 +25,71 @@
 
 ### Step 2: Create Products & Prices
 
-Create exactly these products with the following configuration:
+**⚠️ IMPORTANT:** Use the automated script instead of manual creation:
+```bash
+node scripts/update-stripe-products.mjs
+```
+
+This will create/update all products with correct prices and descriptions.
+
+**OR** create manually with the following configuration:
 
 ---
 
-#### Product 1: Individual Operator
+#### Scale Path Products
 
-**Product Details:**
+**Product 1: Individual Operator**
 - **Name:** `Individual Operator`
-- **Description:** `Platform access for individual operators`
+- **Description:** `Essential platform access for individual operators. Includes operational dashboards, team visibility, automated onboarding, lead handling & routing, and intervention insights. Perfect for getting started with Iron Front infrastructure.`
 - **Pricing Model:** Recurring
-- **Price:** `$99.00 USD`
+- **Price:** `$49.00 USD` (from scale page)
 - **Billing Period:** Monthly
-- **Price ID:** Copy this after creation (starts with `price_`)
 
-**Stripe Dashboard Steps:**
-1. Click "Add product"
-2. Enter name: `Individual Operator`
-3. Enter description: `Platform access for individual operators`
-4. Under "Pricing", select "Recurring"
-5. Set amount: `99.00` USD
-6. Set billing period: `Monthly`
-7. Click "Save product"
-8. **Copy the Price ID** (looks like `price_1ABC123...`)
-
----
-
-#### Product 2: Builder
-
-**Product Details:**
+**Product 2: Builder**
 - **Name:** `Builder`
-- **Description:** `Builder tier platform access`
+- **Description:** `Enhanced platform access for building and scaling operations. Includes all Individual Operator features plus advanced automation, scaling tools, and expanded team management capabilities.`
 - **Pricing Model:** Recurring
-- **Price:** `$299.00 USD`
+- **Price:** `$199.00 USD` (from scale page)
 - **Billing Period:** Monthly
-- **Price ID:** Copy this after creation
 
-**Stripe Dashboard Steps:**
-1. Click "Add product"
-2. Enter name: `Builder`
-3. Enter description: `Builder tier platform access`
-4. Under "Pricing", select "Recurring"
-5. Set amount: `299.00` USD
-6. Set billing period: `Monthly`
-7. Click "Save product"
-8. **Copy the Price ID**
-
----
-
-#### Product 3: Advanced Operator
-
-**Product Details:**
-- **Name:** `Advanced Operator`
-- **Description:** `Advanced operator platform access`
+**Product 3: Org Leader**
+- **Name:** `Org Leader`
+- **Description:** `Enterprise-level platform access for organization leaders. Includes all Builder features plus advanced analytics, priority support, organization-wide management tools, and dedicated resources.`
 - **Pricing Model:** Recurring
-- **Price:** `$599.00 USD`
+- **Price:** `$599.00 USD` (from scale page)
 - **Billing Period:** Monthly
-- **Price ID:** Copy this after creation
 
-**Stripe Dashboard Steps:**
-1. Click "Add product"
-2. Enter name: `Advanced Operator`
-3. Enter description: `Advanced operator platform access`
-4. Under "Pricing", select "Recurring"
-5. Set amount: `599.00` USD
-6. Set billing period: `Monthly`
-7. Click "Save product"
-8. **Copy the Price ID**
+#### Launch Path Products (LaunchPath™)
 
----
-
-#### Product 4: Organization / Leader
-
-**Product Details:**
-- **Name:** `Organization / Leader`
-- **Description:** `Organization and leader tier platform access`
+**Product 4: Starter**
+- **Name:** `Starter`
+- **Description:** `LaunchPath™ Starter tier. Perfect for starting from zero. Includes step-by-step business setup, systems for leads and follow-up, training on structure, and optional access to operating environments (EEP).`
 - **Pricing Model:** Recurring
-- **Price:** `$999.00 USD`
+- **Price:** `$99.00 USD` (from launch page)
 - **Billing Period:** Monthly
-- **Price ID:** Copy this after creation
 
-**Stripe Dashboard Steps:**
-1. Click "Add product"
-2. Enter name: `Organization / Leader`
-3. Enter description: `Organization and leader tier platform access`
-4. Under "Pricing", select "Recurring"
-5. Set amount: `999.00` USD
-6. Set billing period: `Monthly`
-7. Click "Save product"
-8. **Copy the Price ID**
+**Product 5: Growth**
+- **Name:** `Growth`
+- **Description:** `LaunchPath™ Growth tier. Enhanced business setup with advanced systems, expanded training, priority access to operating environments, and scaling support.`
+- **Pricing Model:** Recurring
+- **Price:** `$299.00 USD` (from launch page)
+- **Billing Period:** Monthly
 
----
+**Product 6: Scale**
+- **Name:** `Scale`
+- **Description:** `LaunchPath™ Scale tier. Complete business operating system with full infrastructure, advanced training, comprehensive support, and enterprise-level features.`
+- **Pricing Model:** Recurring
+- **Price:** `$999.00 USD` (from launch page)
+- **Billing Period:** Monthly
 
-#### Product 5: Franchise License
+#### Shared Product
 
-**Product Details:**
+**Product 7: Franchise License**
 - **Name:** `Franchise License`
-- **Description:** `3-year franchise license (one-time payment)`
+- **Description:** `3-year franchise license with full platform access and support. Includes all platform features, dedicated resources, franchise-level support, and comprehensive business infrastructure.`
 - **Pricing Model:** One-time
 - **Price:** `$10,000.00 USD`
 - **Billing Period:** N/A (one-time)
-- **Price ID:** Copy this after creation
-
-**Stripe Dashboard Steps:**
-1. Click "Add product"
-2. Enter name: `Franchise License`
-3. Enter description: `3-year franchise license (one-time payment)`
-4. Under "Pricing", select "One-time"
-5. Set amount: `10000.00` USD
-6. Click "Save product"
-7. **Copy the Price ID**
 
 ---
 

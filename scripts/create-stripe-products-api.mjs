@@ -48,38 +48,56 @@ if (!STRIPE_SECRET_KEY.startsWith('sk_test_') && !STRIPE_SECRET_KEY.startsWith('
 
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
+// Products based on actual scale/launch pages
 const products = [
+  // Scale path
   {
     name: 'Individual Operator',
-    description: 'Platform access for individual operators',
-    amount: 9900, // $99.00 in cents
+    description: 'Essential platform access for individual operators. Includes operational dashboards, team visibility, automated onboarding, lead handling & routing, and intervention insights.',
+    amount: 4900, // $49.00 in cents (from scale page)
     currency: 'usd',
     interval: 'month'
   },
   {
     name: 'Builder',
-    description: 'Builder tier platform access',
-    amount: 29900, // $299.00 in cents
+    description: 'Enhanced platform access for building and scaling operations. Includes all Individual Operator features plus advanced automation, scaling tools, and expanded team management capabilities.',
+    amount: 19900, // $199.00 in cents (from scale page)
     currency: 'usd',
     interval: 'month'
   },
   {
-    name: 'Advanced Operator',
-    description: 'Advanced operator platform access',
-    amount: 59900, // $599.00 in cents
+    name: 'Org Leader',
+    description: 'Enterprise-level platform access for organization leaders. Includes all Builder features plus advanced analytics, priority support, organization-wide management tools, and dedicated resources.',
+    amount: 59900, // $599.00 in cents (from scale page)
+    currency: 'usd',
+    interval: 'month'
+  },
+  // Launch path
+  {
+    name: 'Starter',
+    description: 'LaunchPath™ Starter tier. Perfect for starting from zero. Includes step-by-step business setup, systems for leads and follow-up, training on structure, and optional access to operating environments (EEP).',
+    amount: 9900, // $99.00 in cents (from launch page)
     currency: 'usd',
     interval: 'month'
   },
   {
-    name: 'Organization / Leader',
-    description: 'Organization and leader tier platform access',
-    amount: 99900, // $999.00 in cents
+    name: 'Growth',
+    description: 'LaunchPath™ Growth tier. Enhanced business setup with advanced systems, expanded training, priority access to operating environments, and scaling support.',
+    amount: 29900, // $299.00 in cents (from launch page)
     currency: 'usd',
     interval: 'month'
   },
+  {
+    name: 'Scale',
+    description: 'LaunchPath™ Scale tier. Complete business operating system with full infrastructure, advanced training, comprehensive support, and enterprise-level features.',
+    amount: 99900, // $999.00 in cents (from launch page)
+    currency: 'usd',
+    interval: 'month'
+  },
+  // Shared
   {
     name: 'Franchise License',
-    description: '3-year franchise license (one-time payment)',
+    description: '3-year franchise license with full platform access and support. Includes all platform features, dedicated resources, franchise-level support, and comprehensive business infrastructure.',
     amount: 1000000, // $10,000.00 in cents
     currency: 'usd',
     interval: null // One-time
@@ -125,8 +143,10 @@ async function createProducts() {
       let key;
       if (product.name === 'Individual Operator') key = 'INDIVIDUAL';
       else if (product.name === 'Builder') key = 'BUILDER';
-      else if (product.name === 'Advanced Operator') key = 'ADVANCED';
-      else if (product.name === 'Organization / Leader') key = 'ORGANIZATION';
+      else if (product.name === 'Org Leader') key = 'ORGANIZATION';
+      else if (product.name === 'Starter') key = 'STARTER';
+      else if (product.name === 'Growth') key = 'GROWTH';
+      else if (product.name === 'Scale') key = 'SCALE';
       else if (product.name === 'Franchise License') key = 'FRANCHISE';
 
       priceIds[key] = price.id;

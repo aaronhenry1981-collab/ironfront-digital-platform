@@ -41,15 +41,17 @@ chmod +x scripts/setup-stripe-complete.sh
 
 **Go to:** https://dashboard.stripe.com/test/products
 
-**Create these 5 products:**
+**Create these 7 products:**
 
-| Product | Price | Type |
-|---------|-------|------|
-| Individual Operator | $99 | Monthly recurring |
-| Builder | $299 | Monthly recurring |
-| Advanced Operator | $599 | Monthly recurring |
-| Organization / Leader | $999 | Monthly recurring |
-| Franchise License | $10,000 | One-time |
+| Product | Price | Type | Path |
+|---------|-------|------|------|
+| Individual Operator | $49 | Monthly recurring | Scale |
+| Builder | $199 | Monthly recurring | Scale |
+| Org Leader | $599 | Monthly recurring | Scale |
+| Starter | $99 | Monthly recurring | Launch |
+| Growth | $299 | Monthly recurring | Launch |
+| Scale | $999 | Monthly recurring | Launch |
+| Franchise License | $10,000 | One-time | Both |
 
 **For each product:**
 1. Click "Add product"

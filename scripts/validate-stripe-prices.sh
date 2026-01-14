@@ -43,8 +43,10 @@ check_price() {
 echo "Price IDs:"
 check_price "STRIPE_PRICE_INDIVIDUAL" "  Individual Operator"
 check_price "STRIPE_PRICE_BUILDER" "  Builder"
-check_price "STRIPE_PRICE_ADVANCED" "  Advanced Operator"
-check_price "STRIPE_PRICE_ORGANIZATION" "  Organization/Leader"
+check_price "STRIPE_PRICE_ORGANIZATION" "  Org Leader"
+check_price "STRIPE_PRICE_STARTER" "  Starter (LaunchPath)"
+check_price "STRIPE_PRICE_GROWTH" "  Growth (LaunchPath)"
+check_price "STRIPE_PRICE_SCALE" "  Scale (LaunchPath)"
 check_price "STRIPE_PRICE_FRANCHISE" "  Franchise License"
 
 echo ""

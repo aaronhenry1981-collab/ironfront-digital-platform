@@ -45,8 +45,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const activePriceIds = [
     process.env.STRIPE_PRICE_INDIVIDUAL,
     process.env.STRIPE_PRICE_BUILDER,
-    process.env.STRIPE_PRICE_ADVANCED,
     process.env.STRIPE_PRICE_ORGANIZATION,
+    process.env.STRIPE_PRICE_STARTER,
+    process.env.STRIPE_PRICE_GROWTH,
+    process.env.STRIPE_PRICE_SCALE,
     process.env.STRIPE_PRICE_FRANCHISE,
   ].filter(Boolean);
 

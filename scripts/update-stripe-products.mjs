@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 /**
- * Create Stripe Products via API with Tax Configuration
- * Includes customer-facing descriptions and Stripe Tax setup
- * 
- * Usage:
- *   node scripts/create-stripe-products-with-tax.mjs
+ * Update Existing Stripe Products with Correct Definitions
+ * Based on actual product definitions from scale/launch pages
  */
 
 import Stripe from 'stripe';
@@ -35,30 +32,21 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
 if (!STRIPE_SECRET_KEY) {
   console.error('❌ ERROR: STRIPE_SECRET_KEY not found');
-  console.error('');
-  console.error('Set it in .env or environment:');
-  console.error('  STRIPE_SECRET_KEY=sk_test_... node scripts/create-stripe-products-with-tax.mjs');
   process.exit(1);
-}
-
-if (!STRIPE_SECRET_KEY.startsWith('sk_test_') && !STRIPE_SECRET_KEY.startsWith('sk_live_')) {
-  console.error('⚠️  WARNING: STRIPE_SECRET_KEY format looks invalid');
-  console.error('   Should start with sk_test_ or sk_live_');
 }
 
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-// Products based on actual scale/launch pages
+// Products based on actual pages
 // Scale path products
 const SCALE_PRODUCTS = [
   {
     name: 'Individual Operator',
-    description: 'Platform access for individual operators',
+    description: 'Platform access for individual operators. Includes operational dashboards, team visibility, automated onboarding, lead handling & routing, and intervention insights.',
     customerDescription: 'Essential platform access for individual operators. Includes operational dashboards, team visibility, automated onboarding, lead handling & routing, and intervention insights. Perfect for getting started with Iron Front infrastructure.',
     amount: 4900, // $49.00 in cents (from scale page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000', // SaaS tax code
     metadata: {
       tier: 'individual',
       path: 'scale',
@@ -67,12 +55,11 @@ const SCALE_PRODUCTS = [
   },
   {
     name: 'Builder',
-    description: 'Builder tier platform access',
+    description: 'Enhanced platform access for building and scaling operations. Includes all Individual Operator features plus advanced automation and scaling tools.',
     customerDescription: 'Enhanced platform access for building and scaling operations. Includes all Individual Operator features plus advanced automation, scaling tools, and expanded team management capabilities.',
     amount: 19900, // $199.00 in cents (from scale page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000',
     metadata: {
       tier: 'builder',
       path: 'scale',
@@ -81,12 +68,11 @@ const SCALE_PRODUCTS = [
   },
   {
     name: 'Org Leader',
-    description: 'Organization and leader tier platform access',
+    description: 'Enterprise-level platform access for organization leaders. Includes all Builder features plus advanced analytics, priority support, and organization-wide management tools.',
     customerDescription: 'Enterprise-level platform access for organization leaders. Includes all Builder features plus advanced analytics, priority support, organization-wide management tools, and dedicated resources.',
     amount: 59900, // $599.00 in cents (from scale page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000',
     metadata: {
       tier: 'leader',
       path: 'scale',
@@ -99,12 +85,11 @@ const SCALE_PRODUCTS = [
 const LAUNCH_PRODUCTS = [
   {
     name: 'Starter',
-    description: 'LaunchPath™ Starter tier',
+    description: 'LaunchPath™ Starter tier. Step-by-step business setup, systems for leads and follow-up, training on structure, and optional access to operating environments.',
     customerDescription: 'LaunchPath™ Starter tier. Perfect for starting from zero. Includes step-by-step business setup, systems for leads and follow-up, training on structure, and optional access to operating environments (EEP).',
     amount: 9900, // $99.00 in cents (from launch page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000',
     metadata: {
       tier: 'starter',
       path: 'launch',
@@ -113,12 +98,11 @@ const LAUNCH_PRODUCTS = [
   },
   {
     name: 'Growth',
-    description: 'LaunchPath™ Growth tier',
+    description: 'LaunchPath™ Growth tier. Enhanced business setup with advanced systems, expanded training, and priority access to operating environments.',
     customerDescription: 'LaunchPath™ Growth tier. Enhanced business setup with advanced systems, expanded training, priority access to operating environments, and scaling support.',
     amount: 29900, // $299.00 in cents (from launch page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000',
     metadata: {
       tier: 'growth',
       path: 'launch',
@@ -127,12 +111,11 @@ const LAUNCH_PRODUCTS = [
   },
   {
     name: 'Scale',
-    description: 'LaunchPath™ Scale tier',
+    description: 'LaunchPath™ Scale tier. Complete business operating system with full infrastructure, advanced training, and comprehensive support.',
     customerDescription: 'LaunchPath™ Scale tier. Complete business operating system with full infrastructure, advanced training, comprehensive support, and enterprise-level features.',
     amount: 99900, // $999.00 in cents (from launch page)
     currency: 'usd',
     interval: 'month',
-    taxCode: 'txcd_10100000',
     metadata: {
       tier: 'scale',
       path: 'launch',
@@ -144,12 +127,11 @@ const LAUNCH_PRODUCTS = [
 // Franchise License (shared)
 const FRANCHISE_PRODUCT = {
   name: 'Franchise License',
-  description: '3-year franchise license (one-time payment)',
+  description: '3-year franchise license with full platform access and support. Includes all platform features, dedicated resources, and franchise-level support.',
   customerDescription: '3-year franchise license with full platform access and support. Includes all platform features, dedicated resources, franchise-level support, and comprehensive business infrastructure.',
   amount: 1000000, // $10,000.00 in cents
   currency: 'usd',
   interval: null, // One-time
-  taxCode: 'txcd_10100000',
   metadata: {
     tier: 'franchise',
     path: 'both',
@@ -159,11 +141,11 @@ const FRANCHISE_PRODUCT = {
 };
 
 // All products combined
-const products = [...SCALE_PRODUCTS, ...LAUNCH_PRODUCTS, FRANCHISE_PRODUCT];
+const ALL_PRODUCTS = [...SCALE_PRODUCTS, ...LAUNCH_PRODUCTS, FRANCHISE_PRODUCT];
 
-async function createProducts() {
+async function createOrUpdateProducts() {
   console.log('==========================================');
-  console.log('  Creating Stripe Products with Tax');
+  console.log('  Creating/Updating Stripe Products');
   console.log('==========================================');
   console.log('');
   console.log(`Using API key: ${STRIPE_SECRET_KEY.substring(0, 15)}...`);
@@ -171,37 +153,81 @@ async function createProducts() {
 
   const priceIds = {};
 
-  for (const product of products) {
+  for (const product of ALL_PRODUCTS) {
     try {
-      console.log(`Creating: ${product.name}`);
+      console.log(`Processing: ${product.name}`);
 
-      // Create product with customer-facing description
-      const stripeProduct = await stripe.products.create({
-        name: product.name,
-        description: product.customerDescription || product.description,
-        metadata: product.metadata,
-        // Enable tax if Stripe Tax is configured
-        tax_code: product.taxCode,
+      // Check if product already exists
+      const existingProducts = await stripe.products.search({
+        query: `name:'${product.name}'`,
+        limit: 1,
       });
 
-      // Create price
-      const priceData = {
-        product: stripeProduct.id,
-        unit_amount: product.amount,
-        currency: product.currency,
-        // Enable automatic tax calculation
-        tax_behavior: 'exclusive', // Tax calculated separately (or 'inclusive' if tax included)
-      };
-
-      if (product.interval) {
-        priceData.recurring = {
-          interval: product.interval,
-        };
+      let stripeProduct;
+      if (existingProducts.data.length > 0) {
+        // Update existing product
+        stripeProduct = await stripe.products.update(existingProducts.data[0].id, {
+          name: product.name,
+          description: product.customerDescription || product.description,
+          metadata: product.metadata,
+          active: true,
+        });
+        console.log(`  ✅ Updated existing product: ${stripeProduct.id}`);
+      } else {
+        // Create new product
+        stripeProduct = await stripe.products.create({
+          name: product.name,
+          description: product.customerDescription || product.description,
+          metadata: product.metadata,
+          tax_code: 'txcd_10100000', // SaaS tax code
+        });
+        console.log(`  ✅ Created new product: ${stripeProduct.id}`);
       }
 
-      const price = await stripe.prices.create(priceData);
+      // Check if price already exists for this product
+      const existingPrices = await stripe.prices.list({
+        product: stripeProduct.id,
+        limit: 10,
+      });
 
-      // Map to standard keys
+      // Find matching price
+      let matchingPrice = existingPrices.data.find(p => {
+        if (product.interval) {
+          return p.recurring && 
+                 p.recurring.interval === product.interval &&
+                 p.unit_amount === product.amount &&
+                 p.currency === product.currency;
+        } else {
+          return !p.recurring &&
+                 p.unit_amount === product.amount &&
+                 p.currency === product.currency;
+        }
+      });
+
+      let price;
+      if (matchingPrice) {
+        price = matchingPrice;
+        console.log(`  ✅ Using existing price: ${price.id}`);
+      } else {
+        // Create new price
+        const priceData = {
+          product: stripeProduct.id,
+          unit_amount: product.amount,
+          currency: product.currency,
+          tax_behavior: 'exclusive', // Tax calculated separately
+        };
+
+        if (product.interval) {
+          priceData.recurring = {
+            interval: product.interval,
+          };
+        }
+
+        price = await stripe.prices.create(priceData);
+        console.log(`  ✅ Created new price: ${price.id}`);
+      }
+
+      // Map to standard keys for .env
       let key;
       if (product.name === 'Individual Operator') key = 'INDIVIDUAL';
       else if (product.name === 'Builder') key = 'BUILDER';
@@ -211,70 +237,38 @@ async function createProducts() {
       else if (product.name === 'Scale') key = 'SCALE';
       else if (product.name === 'Franchise License') key = 'FRANCHISE';
 
-      priceIds[key] = price.id;
+      if (key) {
+        priceIds[key] = price.id;
+      }
 
-      console.log(`  ✅ Created: ${product.name}`);
-      console.log(`     Product ID: ${stripeProduct.id}`);
-      console.log(`     Price ID: ${price.id}`);
-      console.log(`     Description: ${product.customerDescription}`);
       console.log('');
     } catch (error) {
-      console.error(`  ❌ Failed to create ${product.name}:`, error.message);
-      if (error.code === 'resource_already_exists') {
-        console.error(`     Product may already exist. Check Stripe Dashboard.`);
-      }
+      console.error(`  ❌ Failed to process ${product.name}:`, error.message);
       console.error('');
     }
   }
 
   console.log('==========================================');
-  console.log('  Products Created!');
+  console.log('  Products Created/Updated!');
   console.log('==========================================');
   console.log('');
-  console.log('Price IDs:');
-  if (priceIds.INDIVIDUAL) console.log(`  STRIPE_PRICE_INDIVIDUAL=${priceIds.INDIVIDUAL}`);
-  if (priceIds.BUILDER) console.log(`  STRIPE_PRICE_BUILDER=${priceIds.BUILDER}`);
-  if (priceIds.ORGANIZATION) console.log(`  STRIPE_PRICE_ORGANIZATION=${priceIds.ORGANIZATION}`);
-  if (priceIds.STARTER) console.log(`  STRIPE_PRICE_STARTER=${priceIds.STARTER}`);
-  if (priceIds.GROWTH) console.log(`  STRIPE_PRICE_GROWTH=${priceIds.GROWTH}`);
-  if (priceIds.SCALE) console.log(`  STRIPE_PRICE_SCALE=${priceIds.SCALE}`);
-  if (priceIds.FRANCHISE) console.log(`  STRIPE_PRICE_FRANCHISE=${priceIds.FRANCHISE}`);
+  console.log('Price IDs for .env:');
   console.log('');
-  console.log('⚠️  Note: Stripe Tax is configured with tax_behavior: exclusive');
-  console.log('   Tax will be calculated automatically based on customer location');
+  
+  if (priceIds.INDIVIDUAL) console.log(`STRIPE_PRICE_INDIVIDUAL=${priceIds.INDIVIDUAL}`);
+  if (priceIds.BUILDER) console.log(`STRIPE_PRICE_BUILDER=${priceIds.BUILDER}`);
+  if (priceIds.ORGANIZATION) console.log(`STRIPE_PRICE_ORGANIZATION=${priceIds.ORGANIZATION}`);
+  if (priceIds.STARTER) console.log(`STRIPE_PRICE_STARTER=${priceIds.STARTER}`);
+  if (priceIds.GROWTH) console.log(`STRIPE_PRICE_GROWTH=${priceIds.GROWTH}`);
+  if (priceIds.SCALE) console.log(`STRIPE_PRICE_SCALE=${priceIds.SCALE}`);
+  if (priceIds.FRANCHISE) console.log(`STRIPE_PRICE_FRANCHISE=${priceIds.FRANCHISE}`);
+  
   console.log('');
-
-  // Output for setup script
-  const requiredIds = [priceIds.INDIVIDUAL, priceIds.BUILDER, priceIds.ORGANIZATION, 
-                       priceIds.STARTER, priceIds.GROWTH, priceIds.SCALE, priceIds.FRANCHISE];
-  if (requiredIds.every(id => id)) {
-    console.log('✅ All products created successfully!');
-    console.log('');
-    console.log('Run this to update .env:');
-    console.log(`./scripts/setup-stripe-quick.sh /opt/ifd-app/.env \\`);
-    if (priceIds.INDIVIDUAL) console.log(`  ${priceIds.INDIVIDUAL} \\`);
-    if (priceIds.BUILDER) console.log(`  ${priceIds.BUILDER} \\`);
-    if (priceIds.ORGANIZATION) console.log(`  ${priceIds.ORGANIZATION} \\`);
-    if (priceIds.STARTER) console.log(`  ${priceIds.STARTER} \\`);
-    if (priceIds.GROWTH) console.log(`  ${priceIds.GROWTH} \\`);
-    if (priceIds.SCALE) console.log(`  ${priceIds.SCALE} \\`);
-    if (priceIds.FRANCHISE) console.log(`  ${priceIds.FRANCHISE}`);
-    console.log('');
-    
-    // Also output in format that setup-stripe-complete.sh can parse
-    if (priceIds.INDIVIDUAL) console.log('STRIPE_PRICE_INDIVIDUAL=' + priceIds.INDIVIDUAL);
-    if (priceIds.BUILDER) console.log('STRIPE_PRICE_BUILDER=' + priceIds.BUILDER);
-    if (priceIds.ORGANIZATION) console.log('STRIPE_PRICE_ORGANIZATION=' + priceIds.ORGANIZATION);
-    if (priceIds.STARTER) console.log('STRIPE_PRICE_STARTER=' + priceIds.STARTER);
-    if (priceIds.GROWTH) console.log('STRIPE_PRICE_GROWTH=' + priceIds.GROWTH);
-    if (priceIds.SCALE) console.log('STRIPE_PRICE_SCALE=' + priceIds.SCALE);
-    if (priceIds.FRANCHISE) console.log('STRIPE_PRICE_FRANCHISE=' + priceIds.FRANCHISE);
-  } else {
-    console.log('⚠️  Some products failed to create. Check errors above.');
-  }
+  console.log('Note: You may need to map these to your existing env variables');
+  console.log('based on your product naming convention.');
 }
 
-createProducts().catch(error => {
+createOrUpdateProducts().catch(error => {
   console.error('Fatal error:', error);
   process.exit(1);
 });
