@@ -269,9 +269,9 @@ export default function PricingPage() {
 
       {/* 5️⃣ COMPLIANCE FOOTER */}
       <section className="bg-white py-16 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm text-gray-500 leading-relaxed text-center">
+            Iron Front Digital provides operational software and infrastructure. We do not offer income guarantees, business opportunities, or financial advice. Outcomes depend on user execution and external factors.
           </p>
         </div>
       </section>

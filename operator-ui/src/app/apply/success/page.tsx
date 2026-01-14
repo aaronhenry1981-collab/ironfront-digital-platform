@@ -86,6 +86,9 @@ export default function ApplySuccessPage() {
             <p className="text-sm text-gray-500 mt-4">
               Complete your application to finalize account setup.
             </p>
+            <p className="text-xs text-gray-400 mt-6">
+              Payments secured by <span className="font-semibold text-gray-500">Stripe</span>
+            </p>
           </div>
         </div>
       </div>

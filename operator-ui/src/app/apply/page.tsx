@@ -188,6 +188,13 @@ export default function ApplyPage() {
               Our team will review your application and follow up within 1–2 business days.
             </p>
           </form>
+
+          {/* Compliance Block */}
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-sm text-gray-500 leading-relaxed text-center">
+              Iron Front Digital provides operational software and infrastructure. We do not offer income guarantees, business opportunities, or financial advice. Outcomes depend on user execution and external factors.
+            </p>
+          </div>
         </div>
       </div>
     </PublicLayout>

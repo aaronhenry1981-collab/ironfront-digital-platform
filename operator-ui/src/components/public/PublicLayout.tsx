@@ -49,17 +49,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex flex-wrap justify-center md:justify-start gap-6 mb-4 md:mb-0">
-              <Link href="/scale" className="text-sm text-gray-600 hover:text-gray-900">
-                Scale
-              </Link>
-              <Link href="/launch" className="text-sm text-gray-600 hover:text-gray-900">
-                Launch
-              </Link>
-              <Link href="/ecosystems" className="text-sm text-gray-600 hover:text-gray-900">
-                Ecosystems
-              </Link>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-wrap justify-center md:justify-start gap-6">
               <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">
                 Pricing
               </Link>
@@ -67,13 +58,20 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 Apply
               </Link>
             </div>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap justify-center gap-6">
               <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
-                Privacy
+                Privacy Policy
               </Link>
               <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-700">
-                Terms
+                Terms of Service
               </Link>
+              <Link href="/security" className="text-sm text-gray-500 hover:text-gray-700">
+                Security & Compliance
+              </Link>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span>Payments secured by</span>
+              <span className="font-semibold text-gray-600">Stripe</span>
             </div>
           </div>
         </div>
