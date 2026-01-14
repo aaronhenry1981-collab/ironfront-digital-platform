@@ -47,11 +47,34 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-gray-50">
+      <footer className="border-t border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center text-sm text-gray-500">
-            <p>Iron Front Digital</p>
-            <p className="mt-2">Business operating platform infrastructure.</p>
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex flex-wrap justify-center md:justify-start gap-6 mb-4 md:mb-0">
+              <Link href="/scale" className="text-sm text-gray-600 hover:text-gray-900">
+                Scale
+              </Link>
+              <Link href="/launch" className="text-sm text-gray-600 hover:text-gray-900">
+                Launch
+              </Link>
+              <Link href="/ecosystems" className="text-sm text-gray-600 hover:text-gray-900">
+                Ecosystems
+              </Link>
+              <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">
+                Pricing
+              </Link>
+              <Link href="/apply" className="text-sm text-gray-600 hover:text-gray-900">
+                Apply
+              </Link>
+            </div>
+            <div className="flex gap-6">
+              <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-700">
+                Terms
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
