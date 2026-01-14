@@ -29,7 +29,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null)
   const PRICE_IDS = getPriceIds()
 
-  const handleCheckout = async (priceId: string) => {
+  const handleCheckout = async (priceId: string, tier: string) => {
     if (!priceId) {
       alert('Price not configured. Please contact support.')
       return
@@ -42,7 +42,7 @@ export default function PricingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, tier }),
       })
 
       const data = await response.json()
@@ -134,7 +134,8 @@ export default function PricingPage() {
                   handleCheckout(
                     billingCycle === 'monthly'
                       ? PRICE_IDS.starter_monthly
-                      : PRICE_IDS.starter_annual
+                      : PRICE_IDS.starter_annual,
+                    'starter'
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.starter_monthly}
@@ -165,7 +166,8 @@ export default function PricingPage() {
                   handleCheckout(
                     billingCycle === 'monthly'
                       ? PRICE_IDS.growth_monthly
-                      : PRICE_IDS.growth_annual
+                      : PRICE_IDS.growth_annual,
+                    'growth'
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.growth_monthly}
@@ -196,7 +198,8 @@ export default function PricingPage() {
                   handleCheckout(
                     billingCycle === 'monthly'
                       ? PRICE_IDS.scale_monthly
-                      : PRICE_IDS.scale_annual
+                      : PRICE_IDS.scale_annual,
+                    'scale'
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.scale_monthly}

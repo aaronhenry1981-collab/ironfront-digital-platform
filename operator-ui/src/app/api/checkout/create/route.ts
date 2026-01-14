@@ -10,7 +10,7 @@ const APP_URL = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { priceId, email } = body
+    const { priceId, email, tier } = body
 
     if (!priceId) {
       return NextResponse.json(
@@ -42,10 +42,11 @@ export async function POST(request: NextRequest) {
         },
       ],
       customer_email: email || undefined,
-      success_url: `${APP_URL}/apply/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${APP_URL}/apply/success?session_id={CHECKOUT_SESSION_ID}${tier ? `&tier=${tier}` : ''}`,
       cancel_url: `${APP_URL}/pricing`,
       metadata: {
         source: 'pricing_page',
+        tier: tier || '',
       },
     })
 
