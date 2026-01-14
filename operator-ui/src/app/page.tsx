@@ -7,12 +7,12 @@ export default function HomePage() {
   return (
     <PublicLayout>
       {/* 1️⃣ HERO SECTION */}
-      <section className="bg-white py-20 sm:py-32">
+      <section className="bg-white py-24 sm:py-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl sm:text-6xl font-medium text-gray-900 mb-6 leading-tight">
+          <h1 className="text-5xl sm:text-6xl font-medium text-gray-900 mb-7 leading-tight">
             The Platform That Runs the Business Behind the Business
           </h1>
-          <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl sm:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
             Iron Front Digital provides the systems, automation, and operational visibility required to build and scale real businesses — without chaos or guesswork.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -73,9 +73,9 @@ export default function HomePage() {
       </section>
 
       {/* 3️⃣ WHAT WE DO (4-CARD GRID) */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             <div className="text-center">
               <div className="mb-4">
                 <svg className="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,13 +119,13 @@ export default function HomePage() {
       </section>
 
       {/* 4️⃣ PATH SELECTION */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Scale Card */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-300 transition-colors">
-              <h2 className="text-2xl font-medium text-gray-900 mb-4">Scale</h2>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-10 hover:border-gray-300 transition-colors">
+              <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-5">Scale</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed text-base">
                 For existing businesses and leaders who want structure, clarity, and systemized execution.
               </p>
               <Link
@@ -137,9 +137,9 @@ export default function HomePage() {
             </div>
 
             {/* Launch Card */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-300 transition-colors">
-              <h2 className="text-2xl font-medium text-gray-900 mb-4">Launch</h2>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-10 hover:border-gray-300 transition-colors">
+              <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-5">Launch</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed text-base">
                 For individuals starting from zero who want a guided, structured path to business ownership.
               </p>
               <Link

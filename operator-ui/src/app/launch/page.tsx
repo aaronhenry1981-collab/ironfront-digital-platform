@@ -44,9 +44,9 @@ export default function LaunchPage() {
         subhead="LaunchPath™ is a guided operating system for people starting from zero."
       />
 
-      <div className="bg-white py-16">
+      <div className="bg-white py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-medium text-gray-900 mb-6">What LaunchPath™ provides</h2>
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-7">What LaunchPath™ provides</h2>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
               <span className="mr-2">•</span>
@@ -68,17 +68,17 @@ export default function LaunchPage() {
         </div>
       </div>
 
-      <div className="bg-gray-50 py-16">
+      <div className="bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-medium text-gray-900 mb-8 text-center">Pricing</h2>
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-10 text-center">Pricing</h2>
           <TierCards tiers={tiers} />
         </div>
       </div>
 
-      <div className="bg-white py-16 border-t border-gray-200">
+      <div className="bg-white py-20 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-medium text-gray-900 mb-4">Optional: Explore Operating Environments</h2>
-          <p className="text-gray-700 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-5">Optional: Explore Operating Environments</h2>
+          <p className="text-gray-700 mb-8 leading-relaxed text-lg">
             Some members choose to operate within established ecosystems that use Iron Front infrastructure. Access is optional, independent, and never guaranteed.
           </p>
           <Link

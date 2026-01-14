@@ -62,12 +62,12 @@ export default function PricingPage() {
   return (
     <PublicLayout>
       {/* 1️⃣ PAGE HEADER */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white py-20 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl font-medium text-gray-900 mb-4">
+          <h1 className="text-4xl sm:text-5xl font-medium text-gray-900 mb-5">
             Pricing Built for Real Businesses
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 leading-relaxed">
             Clear, transparent pricing for individuals, operators, and organizations at every stage.
           </p>
         </div>
@@ -107,26 +107,26 @@ export default function PricingPage() {
       </section>
 
       {/* 2️⃣ SECTION ONE — LAUNCHPATH™ */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-medium text-gray-900 mb-2">LaunchPath™</h2>
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-3">LaunchPath™</h2>
             <p className="text-lg text-gray-600">For individuals starting a business from zero</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Individual Operator */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 hover:border-gray-300 transition-colors">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Individual Operator</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-medium text-gray-900">
+            <div className="border-2 border-gray-200 rounded-lg p-8 sm:p-10 hover:border-gray-300 transition-colors">
+              <h3 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3">Individual Operator</h3>
+              <div className="mb-5">
+                <span className="text-4xl sm:text-5xl font-medium text-gray-900">
                   {billingCycle === 'monthly' ? '$99' : '$999'}
                 </span>
-                <span className="text-gray-600 ml-2">
+                <span className="text-gray-600 ml-2 text-lg">
                   {billingCycle === 'monthly' ? '/ month' : '/ year'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
                 Foundational access to the operating platform with core systems and workflows.
               </p>
               <button
@@ -142,23 +142,23 @@ export default function PricingPage() {
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.starter_monthly : PRICE_IDS.starter_annual)
-                  ? 'Loading...'
+                  ? 'Processing...'
                   : 'Get Started'}
               </button>
             </div>
 
             {/* Builder */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 hover:border-gray-300 transition-colors">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Builder</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-medium text-gray-900">
+            <div className="border-2 border-gray-200 rounded-lg p-8 sm:p-10 hover:border-gray-300 transition-colors">
+              <h3 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3">Builder</h3>
+              <div className="mb-5">
+                <span className="text-4xl sm:text-5xl font-medium text-gray-900">
                   {billingCycle === 'monthly' ? '$299' : '$2,999'}
                 </span>
-                <span className="text-gray-600 ml-2">
+                <span className="text-gray-600 ml-2 text-lg">
                   {billingCycle === 'monthly' ? '/ month' : '/ year'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
                 Expanded tools and structured support for individuals actively building a business.
               </p>
               <button
@@ -174,23 +174,23 @@ export default function PricingPage() {
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.growth_monthly : PRICE_IDS.growth_annual)
-                  ? 'Loading...'
+                  ? 'Processing...'
                   : 'Get Started'}
               </button>
             </div>
 
             {/* Advanced Operator */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 hover:border-gray-300 transition-colors">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Advanced Operator</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-medium text-gray-900">
+            <div className="border-2 border-gray-200 rounded-lg p-8 sm:p-10 hover:border-gray-300 transition-colors">
+              <h3 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3">Advanced Operator</h3>
+              <div className="mb-5">
+                <span className="text-4xl sm:text-5xl font-medium text-gray-900">
                   {billingCycle === 'monthly' ? '$999' : '$9,999'}
                 </span>
-                <span className="text-gray-600 ml-2">
+                <span className="text-gray-600 ml-2 text-lg">
                   {billingCycle === 'monthly' ? '/ month' : '/ year'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
                 Full platform access for high-activity operators managing serious volume.
               </p>
               <button
@@ -206,7 +206,7 @@ export default function PricingPage() {
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.scale_monthly : PRICE_IDS.scale_annual)
-                  ? 'Loading...'
+                  ? 'Processing...'
                   : 'Get Started'}
               </button>
             </div>
@@ -215,26 +215,26 @@ export default function PricingPage() {
       </section>
 
       {/* 3️⃣ SECTION TWO — SCALE */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-medium text-gray-900 mb-2">Scale</h2>
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-3">Scale</h2>
             <p className="text-lg text-gray-600">For existing businesses and leaders</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Organization / Leader */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 bg-white hover:border-gray-300 transition-colors">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Organization / Leader</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-medium text-gray-900">
+            <div className="border-2 border-gray-200 rounded-lg p-8 sm:p-10 bg-white hover:border-gray-300 transition-colors">
+              <h3 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3">Organization / Leader</h3>
+              <div className="mb-5">
+                <span className="text-4xl sm:text-5xl font-medium text-gray-900">
                   {billingCycle === 'monthly' ? '$599' : '$5,999'}
                 </span>
-                <span className="text-gray-600 ml-2">
+                <span className="text-gray-600 ml-2 text-lg">
                   {billingCycle === 'monthly' ? '/ month' : '/ year'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
                 Organization-level access with visibility, governance, and team-level system support.
               </p>
               <Link
@@ -246,14 +246,14 @@ export default function PricingPage() {
             </div>
 
             {/* Franchise License */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 bg-white hover:border-gray-300 transition-colors">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Franchise License</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-medium text-gray-900">$10,000</span>
-                <span className="text-gray-600 ml-2">one-time</span>
+            <div className="border-2 border-gray-200 rounded-lg p-8 sm:p-10 bg-white hover:border-gray-300 transition-colors">
+              <h3 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3">Franchise License</h3>
+              <div className="mb-5">
+                <span className="text-4xl sm:text-5xl font-medium text-gray-900">$10,000</span>
+                <span className="text-gray-600 ml-2 text-lg">one-time</span>
               </div>
-              <p className="text-xs text-gray-500 mb-2">3-year license</p>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              <p className="text-sm text-gray-500 mb-3">3-year license</p>
+              <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
                 Licensed deployment of the Iron Front Digital platform under approved branding terms.
               </p>
               <Link
@@ -268,9 +268,9 @@ export default function PricingPage() {
       </section>
 
       {/* 5️⃣ COMPLIANCE FOOTER */}
-      <section className="bg-white py-12 border-t border-gray-200">
+      <section className="bg-white py-16 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 leading-relaxed">
             Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.
           </p>
         </div>

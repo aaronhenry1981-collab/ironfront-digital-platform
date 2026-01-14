@@ -44,9 +44,9 @@ export default function ScalePage() {
         subhead="We don't replace your business. We make it operate better."
       />
 
-      <div className="bg-white py-16">
+      <div className="bg-white py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-medium text-gray-900 mb-6">What this is</h2>
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-7">What this is</h2>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
               <span className="mr-2">•</span>
@@ -70,7 +70,7 @@ export default function ScalePage() {
             </li>
           </ul>
 
-          <h2 className="text-2xl font-medium text-gray-900 mb-6 mt-12">What this is NOT</h2>
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-7 mt-16">What this is NOT</h2>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
               <span className="mr-2">•</span>
@@ -96,9 +96,9 @@ export default function ScalePage() {
         </div>
       </div>
 
-      <div className="bg-gray-50 py-16">
+      <div className="bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-medium text-gray-900 mb-8 text-center">Pricing</h2>
+          <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-10 text-center">Pricing</h2>
           <TierCards tiers={tiers} />
         </div>
       </div>

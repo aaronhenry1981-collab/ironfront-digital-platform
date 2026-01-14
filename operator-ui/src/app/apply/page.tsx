@@ -67,22 +67,24 @@ export default function ApplyPage() {
 
   return (
     <PublicLayout>
-      <div className="bg-white py-16">
+      <div className="bg-white py-20 sm:py-24">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-medium text-gray-900 mb-4">
-            Apply for Platform Access
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Iron Front Digital is designed for serious operators and organizations. Applications help ensure alignment, compliance, and appropriate platform use.
-          </p>
+          <div className="mb-10">
+            <h1 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-4">
+              Apply for Platform Access
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Iron Front Digital is designed for serious operators and organizations. Applications help ensure alignment, compliance, and appropriate platform use.
+            </p>
+          </div>
 
           {/* Ecosystem Entry Program Copy Block */}
           {isEcosystem && (
-            <div className="bg-gray-50 border-l-4 border-gray-400 p-6 mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-6 sm:p-8 mb-10">
+              <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">
                 Ecosystem Entry Program
               </h2>
-              <div className="space-y-2 text-sm text-gray-700">
+              <div className="space-y-3 text-sm sm:text-base text-gray-700 leading-relaxed">
                 <p>
                   Participation in operating environments is optional and independent.
                 </p>
@@ -96,7 +98,7 @@ export default function ApplyPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-7">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Name
@@ -165,22 +167,24 @@ export default function ApplyPage() {
 
             {/* Show paid indicator if coming from checkout */}
             {paid && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                <p className="text-sm text-green-800">
+              <div className="bg-green-50 border border-green-200 rounded-md p-5">
+                <p className="text-sm text-green-800 leading-relaxed">
                   ✓ Payment processed. Your account will be provisioned within 24 hours.
                 </p>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full px-6 py-3 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Submitting...' : 'Submit Application'}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Submitting...' : paid ? 'Continue Application' : 'Submit Application'}
+              </button>
+            </div>
 
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-gray-500 text-center pt-2">
               Our team will review your application and follow up within 1–2 business days.
             </p>
           </form>
