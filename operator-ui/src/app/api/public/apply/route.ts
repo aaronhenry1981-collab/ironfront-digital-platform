@@ -16,7 +16,7 @@ const INTAKE_ORG_ID = '00000000-0000-0000-0000-000000000002' // Iron Front Intak
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, intent, tier, message, preferences } = body
+    const { name, email, intent, tier, message, preferences, paid } = body
 
     // Validate email
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -56,8 +56,13 @@ export async function POST(request: NextRequest) {
         name: name || null,
         email,
         intent,
-        preferences: preferences || (message ? { message } : null),
-        status: 'new',
+        preferences: {
+          ...(preferences || {}),
+          paid: paid || false,
+          tier: tier || null,
+          message: message || null,
+        },
+        status: paid ? 'qualified' : 'new', // Paid users start as qualified
         assigned_user_id: routing.assigned_user_id,
         created_at: new Date(),
       },

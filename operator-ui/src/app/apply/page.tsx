@@ -9,17 +9,21 @@ export default function ApplyPage() {
   const router = useRouter()
   const [intent, setIntent] = useState<string>('')
   const [tier, setTier] = useState<string>('')
+  const [paid, setPaid] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
+  const [orgType, setOrgType] = useState<string>('')
+  const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const intentParam = searchParams.get('intent') || ''
     const tierParam = searchParams.get('tier') || ''
+    const paidParam = searchParams.get('paid') === 'true'
+    
     setIntent(intentParam)
     setTier(tierParam)
+    setPaid(paidParam)
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,9 +39,13 @@ export default function ApplyPage() {
         body: JSON.stringify({
           name,
           email,
-          intent,
+          intent: intent || 'scale', // Default to scale if not set
           tier,
-          message,
+          preferences: {
+            org_type: orgType,
+            description,
+            paid: paid,
+          },
         }),
       })
 
@@ -45,41 +53,49 @@ export default function ApplyPage() {
         throw new Error('Failed to submit application')
       }
 
-      setSubmitted(true)
+      // Route to complete page
+      router.push('/apply/complete')
     } catch (error) {
       console.error('Application error:', error)
       alert('There was an error submitting your application. Please try again.')
-    } finally {
       setSubmitting(false)
     }
   }
 
-  if (submitted) {
-    return (
-      <PublicLayout>
-        <div className="bg-white py-16">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl font-medium text-gray-900 mb-4">Application Received</h1>
-            <p className="text-gray-700 mb-8">
-              We'll reach out with access instructions.
-            </p>
-            <button
-              onClick={() => router.push('/')}
-              className="px-6 py-3 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              Return to Home
-            </button>
-          </div>
-        </div>
-      </PublicLayout>
-    )
-  }
+  // Determine if this is ecosystem entry
+  const isEcosystem = intent === 'ecosystems'
 
   return (
     <PublicLayout>
       <div className="bg-white py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-medium text-gray-900 mb-8">Apply</h1>
+          <h1 className="text-3xl font-medium text-gray-900 mb-4">
+            Apply for Platform Access
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            Iron Front Digital is designed for serious operators and organizations. Applications help ensure alignment, compliance, and appropriate platform use.
+          </p>
+
+          {/* Ecosystem Entry Program Copy Block */}
+          {isEcosystem && (
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-6 mb-8">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                Ecosystem Entry Program
+              </h2>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p>
+                  Participation in operating environments is optional and independent.
+                </p>
+                <p>
+                  Access is never guaranteed and is subject to alignment and capacity.
+                </p>
+                <p>
+                  Iron Front Digital is a platform infrastructure provider, not a business opportunity.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -108,34 +124,68 @@ export default function ApplyPage() {
               />
             </div>
 
+            {/* Hidden intent field if already known */}
             {intent && (
               <input type="hidden" name="intent" value={intent} />
             )}
 
+            {/* Organization type (for scale/leader/franchise) */}
+            {(intent === 'scale' || !intent) && (
+              <div>
+                <label htmlFor="orgType" className="block text-sm font-medium text-gray-700 mb-2">
+                  Organization Type
+                </label>
+                <select
+                  id="orgType"
+                  value={orgType}
+                  onChange={(e) => setOrgType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">Select...</option>
+                  <option value="individual">Individual Operator</option>
+                  <option value="leader">Organization Leader</option>
+                  <option value="company">Company Owner</option>
+                </select>
+              </div>
+            )}
+
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                Message (Optional)
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                Briefly describe what you're building or managing.
               </label>
               <textarea
-                id="message"
+                id="description"
                 rows={4}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                placeholder="A brief description helps us understand your needs..."
               />
             </div>
+
+            {/* Show paid indicator if coming from checkout */}
+            {paid && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <p className="text-sm text-green-800">
+                  ✓ Payment processed. Your account will be provisioned within 24 hours.
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={submitting}
               className="w-full px-6 py-3 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Submitting...' : 'Submit'}
+              {submitting ? 'Submitting...' : 'Submit Application'}
             </button>
+
+            <p className="text-sm text-gray-500 text-center">
+              Our team will review your application and follow up within 1–2 business days.
+            </p>
           </form>
         </div>
       </div>
     </PublicLayout>
   )
 }
-

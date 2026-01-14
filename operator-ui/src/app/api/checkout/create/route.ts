@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       customer_email: email || undefined,
-      success_url: `${APP_URL}/apply?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${APP_URL}/apply/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/pricing`,
       metadata: {
         source: 'pricing_page',
