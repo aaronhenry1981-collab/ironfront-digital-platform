@@ -18,13 +18,13 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/scale"
-              className="px-8 py-4 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors"
+              className="px-8 py-4 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors touch-manipulation"
             >
               Scale My Business
             </Link>
             <Link
               href="/launch"
-              className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-md text-lg font-medium hover:bg-gray-50 transition-colors"
+              className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-md text-lg font-medium hover:bg-gray-50 transition-colors touch-manipulation"
             >
               Start a Business
             </Link>

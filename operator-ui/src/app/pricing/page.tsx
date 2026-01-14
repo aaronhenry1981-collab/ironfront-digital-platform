@@ -35,6 +35,11 @@ export default function PricingPage() {
       return
     }
 
+    // Prevent double clicks
+    if (loading) {
+      return
+    }
+
     setLoading(priceId)
     try {
       const response = await fetch('/api/checkout/create', {
@@ -42,19 +47,26 @@ export default function PricingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ priceId, tier }),
+        body: JSON.stringify({ priceId, tier, intent: 'launch' }),
       })
 
       const data = await response.json()
 
+      if (!response.ok) {
+        throw new Error(data.error || 'We couldn\'t start checkout. Please try again or contact support.')
+      }
+
       if (data.url) {
+        // Store tier in sessionStorage for recovery
+        sessionStorage.setItem('checkout_tier', tier)
+        sessionStorage.setItem('checkout_intent', 'launch')
         window.location.href = data.url
       } else {
-        throw new Error(data.error || 'Failed to create checkout session')
+        throw new Error('We couldn\'t start checkout. Please try again or contact support.')
       }
     } catch (error: any) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
+      alert(error.message || 'We couldn\'t start checkout. Please try again or contact support.')
       setLoading(null)
     }
   }
@@ -81,7 +93,7 @@ export default function PricingPage() {
               <button
                 type="button"
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-3 text-sm font-medium rounded-l-lg border ${
+                className={`px-6 py-3 text-sm font-medium rounded-l-lg border touch-manipulation ${
                   billingCycle === 'monthly'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -92,7 +104,7 @@ export default function PricingPage() {
               <button
                 type="button"
                 onClick={() => setBillingCycle('annual')}
-                className={`px-6 py-3 text-sm font-medium rounded-r-lg border ${
+                className={`px-6 py-3 text-sm font-medium rounded-r-lg border touch-manipulation ${
                   billingCycle === 'annual'
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -139,7 +151,7 @@ export default function PricingPage() {
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.starter_monthly}
-                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.starter_monthly : PRICE_IDS.starter_annual)
                   ? 'Processing...'
@@ -171,7 +183,7 @@ export default function PricingPage() {
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.growth_monthly}
-                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.growth_monthly : PRICE_IDS.growth_annual)
                   ? 'Processing...'
@@ -203,7 +215,7 @@ export default function PricingPage() {
                   )
                 }
                 disabled={loading !== null || !PRICE_IDS.scale_monthly}
-                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.scale_monthly : PRICE_IDS.scale_annual)
                   ? 'Processing...'
@@ -239,7 +251,7 @@ export default function PricingPage() {
               </p>
               <Link
                 href="/apply?intent=scale&tier=organization"
-                className="block w-full text-center px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors"
+                className="block w-full text-center px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors touch-manipulation"
               >
                 Apply for Access
               </Link>
@@ -258,7 +270,7 @@ export default function PricingPage() {
               </p>
               <Link
                 href="/apply?intent=scale&tier=franchise"
-                className="block w-full text-center px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors"
+                className="block w-full text-center px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors touch-manipulation"
               >
                 Request Franchise Access
               </Link>

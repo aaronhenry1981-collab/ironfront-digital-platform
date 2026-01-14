@@ -102,10 +102,20 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ success: true, id: intake.id })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Public apply API error:', error)
+    
+    // Provide more specific error messages
+    if (error.code === 'P2002') {
+      // Prisma unique constraint violation (duplicate email)
+      return NextResponse.json(
+        { error: 'An application with this email already exists. Please contact support if you need assistance.' },
+        { status: 409 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'We couldn\'t process your application. Please try again or contact support.' },
       { status: 500 }
     )
   }

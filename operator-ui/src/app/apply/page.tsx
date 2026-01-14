@@ -15,6 +15,8 @@ export default function ApplyPage() {
   const [orgType, setOrgType] = useState<string>('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const intentParam = searchParams.get('intent') || ''
@@ -28,6 +30,26 @@ export default function ApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent double submission
+    if (submitting || submitted) {
+      return
+    }
+
+    // Validate email format (handle long emails, uppercase, etc.)
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail || !normalizedEmail.includes('@') || !normalizedEmail.includes('.')) {
+      setError('Please enter a valid email address.')
+      return
+    }
+
+    // Check email length (reasonable limit)
+    if (normalizedEmail.length > 254) {
+      setError('Email address is too long. Please use a shorter email address.')
+      return
+    }
+
+    setError(null)
     setSubmitting(true)
 
     try {
@@ -37,27 +59,34 @@ export default function ApplyPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
-          email,
-          intent: intent || 'scale', // Default to scale if not set
+          name: name.trim(),
+          email: normalizedEmail,
+          intent: intent || 'scale',
           tier,
           preferences: {
             org_type: orgType,
-            description,
+            description: description.trim(),
             paid: paid,
           },
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to submit application')
+        // Handle specific error messages from API
+        const errorMessage = data.error || 'We couldn\'t complete that step. Please try again or contact support.'
+        throw new Error(errorMessage)
       }
 
+      // Mark as submitted to prevent double submission
+      setSubmitted(true)
+      
       // Route to complete page
       router.push('/apply/complete')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Application error:', error)
-      alert('There was an error submitting your application. Please try again.')
+      setError(error.message || 'We couldn\'t complete that step. Please try again or contact support.')
       setSubmitting(false)
     }
   }
@@ -121,8 +150,15 @@ export default function ApplyPage() {
                 id="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError(null) // Clear error on change
+                }}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-gray-900'
+                }`}
+                placeholder="your.email@example.com"
+                maxLength={254}
               />
             </div>
 
@@ -174,13 +210,22 @@ export default function ApplyPage() {
               </div>
             )}
 
+            {/* Error message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-sm text-red-800 leading-relaxed">
+                  {error}
+                </p>
+              </div>
+            )}
+
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || submitted}
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Submitting...' : paid ? 'Continue Application' : 'Submit Application'}
+                {submitting ? 'Submitting...' : submitted ? 'Submitted' : paid ? 'Continue Application' : 'Submit Application'}
               </button>
             </div>
 

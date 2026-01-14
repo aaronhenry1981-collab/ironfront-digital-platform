@@ -10,20 +10,29 @@ export default function ApplySuccessPage() {
   const router = useRouter()
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [tier, setTier] = useState<string>('')
+  const [intent, setIntent] = useState<string>('launch')
 
   useEffect(() => {
     const session = searchParams.get('session_id')
     setSessionId(session)
     
-    // Extract tier from session if available (would need to be passed via metadata)
-    // For now, we'll use a default or extract from URL params
+    // Try to get tier from URL params first
     const tierParam = searchParams.get('tier') || ''
-    setTier(tierParam)
+    const intentParam = searchParams.get('intent') || ''
+    
+    // Fallback to sessionStorage if URL params missing (recovery case)
+    const storedTier = sessionStorage.getItem('checkout_tier')
+    const storedIntent = sessionStorage.getItem('checkout_intent')
+    
+    setTier(tierParam || storedTier || 'starter')
+    setIntent(intentParam || storedIntent || 'launch')
+    
+    // Clean up sessionStorage after use
+    if (storedTier) {
+      sessionStorage.removeItem('checkout_tier')
+      sessionStorage.removeItem('checkout_intent')
+    }
   }, [searchParams])
-
-  // Map tier to intent for the apply form
-  // All LaunchPath tiers (paid) use 'launch' intent
-  const intent = 'launch'
 
   return (
     <PublicLayout>
@@ -78,7 +87,7 @@ export default function ApplySuccessPage() {
 
           <div className="text-center">
             <Link
-              href={`/apply?paid=true&intent=launch&tier=${tier || 'starter'}`}
+              href={`/apply?paid=true&intent=${intent}&tier=${tier}`}
               className="inline-block px-8 py-3 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors"
             >
               Continue Application
@@ -86,6 +95,22 @@ export default function ApplySuccessPage() {
             <p className="text-sm text-gray-500 mt-4">
               Complete your application to finalize account setup.
             </p>
+            
+            {/* Recovery CTA for users who closed tab or refreshed */}
+            {!sessionId && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-3">
+                  Continue where you left off
+                </p>
+                <Link
+                  href={`/apply?paid=true&intent=${intent}&tier=${tier}`}
+                  className="text-sm text-gray-900 font-medium hover:text-gray-700 underline"
+                >
+                  Complete your application →
+                </Link>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-400 mt-6">
               Payments secured by <span className="font-semibold text-gray-500">Stripe</span>
             </p>
