@@ -137,7 +137,7 @@ export default function PricingPage() {
                       : PRICE_IDS.starter_annual
                   )
                 }
-                disabled={loading !== null}
+                disabled={loading !== null || !PRICE_IDS.starter_monthly}
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.starter_monthly : PRICE_IDS.starter_annual)
@@ -168,7 +168,7 @@ export default function PricingPage() {
                       : PRICE_IDS.growth_annual
                   )
                 }
-                disabled={loading !== null}
+                disabled={loading !== null || !PRICE_IDS.growth_monthly}
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.growth_monthly : PRICE_IDS.growth_annual)
@@ -199,7 +199,7 @@ export default function PricingPage() {
                       : PRICE_IDS.scale_annual
                   )
                 }
-                disabled={loading !== null}
+                disabled={loading !== null || !PRICE_IDS.scale_monthly}
                 className="w-full px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading === (billingCycle === 'monthly' ? PRICE_IDS.scale_monthly : PRICE_IDS.scale_annual)
