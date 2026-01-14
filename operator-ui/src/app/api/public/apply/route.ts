@@ -49,6 +49,16 @@ export async function POST(request: NextRequest) {
     // Route intake to operator pool
     const routing = await routeIntake(INTAKE_ORG_ID, intent as 'scale' | 'launch' | 'ecosystems')
 
+    // Build preferences object
+    const preferencesData: Record<string, any> = {
+      ...(preferences || {}),
+      paid: paid || false,
+      tier: tier || null,
+    }
+    if (message) {
+      preferencesData.message = message
+    }
+
     // Create intake record
     const intake = await db.intake.create({
       data: {
@@ -56,12 +66,7 @@ export async function POST(request: NextRequest) {
         name: name || null,
         email,
         intent,
-        preferences: {
-          ...(preferences || {}),
-          paid: paid || false,
-          tier: tier || null,
-          message: message || null,
-        },
+        preferences: preferencesData,
         status: paid ? 'qualified' : 'new', // Paid users start as qualified
         assigned_user_id: routing.assigned_user_id,
         created_at: new Date(),
