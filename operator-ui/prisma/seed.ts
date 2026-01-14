@@ -173,6 +173,80 @@ async function main() {
 
   console.log(`Created ${recommendations.length} recommendations`)
 
+  // Create additional operators for intake routing
+  const operator1 = await prisma.user.upsert({
+    where: { email: 'operator1@ironfrontdigital.com' },
+    update: {},
+    create: {
+      email: 'operator1@ironfrontdigital.com',
+    },
+  })
+
+  const operator2 = await prisma.user.upsert({
+    where: { email: 'operator2@ironfrontdigital.com' },
+    update: {},
+    create: {
+      email: 'operator2@ironfrontdigital.com',
+    },
+  })
+
+  await prisma.orgMembership.upsert({
+    where: {
+      org_id_user_id: {
+        org_id: intakeOrg.id,
+        user_id: operator1.id,
+      },
+    },
+    update: {},
+    create: {
+      org_id: intakeOrg.id,
+      user_id: operator1.id,
+      role: 'operator',
+    },
+  })
+
+  await prisma.orgMembership.upsert({
+    where: {
+      org_id_user_id: {
+        org_id: intakeOrg.id,
+        user_id: operator2.id,
+      },
+    },
+    update: {},
+    create: {
+      org_id: intakeOrg.id,
+      user_id: operator2.id,
+      role: 'operator',
+    },
+  })
+
+  console.log('Created 2 additional operators for intake routing')
+
+  // Create sample intakes
+  const sampleIntakes = []
+  for (let i = 1; i <= 8; i++) {
+    const intent = i <= 3 ? 'launch' : i <= 6 ? 'scale' : 'ecosystems'
+    const status = i <= 2 ? 'new' : i <= 4 ? 'contacted' : i <= 6 ? 'qualified' : 'closed'
+    const assigned = i % 2 === 0 ? operator1.id : operator2.id
+
+    const intake = await prisma.intake.create({
+      data: {
+        org_id: intakeOrg.id,
+        name: `Sample Intake ${i}`,
+        email: `intake${i}@example.com`,
+        intent,
+        status,
+        assigned_user_id: status === 'new' && i % 3 === 0 ? null : assigned,
+        created_at: new Date(now.getTime() - i * 2 * 24 * 60 * 60 * 1000),
+        first_contact_at: status !== 'new' ? new Date(now.getTime() - (i * 2 - 1) * 24 * 60 * 60 * 1000) : null,
+        last_activity_at: new Date(now.getTime() - i * 12 * 60 * 60 * 1000),
+      },
+    })
+    sampleIntakes.push(intake)
+  }
+
+  console.log(`Created ${sampleIntakes.length} sample intakes`)
+
   console.log('✅ Seeding complete!')
 }
 

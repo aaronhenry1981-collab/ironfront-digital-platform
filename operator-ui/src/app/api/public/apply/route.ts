@@ -3,18 +3,20 @@
  * POST /api/public/apply
  * 
  * Handles public applications from /scale, /launch, /ecosystems
+ * Creates Intake records with routing
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { eventsRepo } from '@/lib/repositories/events'
+import { routeIntake } from '@/lib/intake-routing'
 
 const INTAKE_ORG_ID = '00000000-0000-0000-0000-000000000002' // Iron Front Intake org
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, intent, tier, message } = body
+    const { name, email, intent, tier, message, preferences } = body
 
     // Validate email
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -44,8 +46,25 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Store lead
-    const lead = await db.lead.create({
+    // Route intake to operator pool
+    const routing = await routeIntake(INTAKE_ORG_ID, intent as 'scale' | 'launch' | 'ecosystems')
+
+    // Create intake record
+    const intake = await db.intake.create({
+      data: {
+        org_id: INTAKE_ORG_ID,
+        name: name || null,
+        email,
+        intent,
+        preferences: preferences || (message ? { message } : null),
+        status: 'new',
+        assigned_user_id: routing.assigned_user_id,
+        created_at: new Date(),
+      },
+    })
+
+    // Store legacy lead record (for backward compatibility)
+    await db.lead.create({
       data: {
         org_id: INTAKE_ORG_ID,
         name: name || null,
@@ -61,16 +80,18 @@ export async function POST(request: NextRequest) {
       org_id: INTAKE_ORG_ID,
       actor_user_id: null,
       actor_role: 'public',
-      event_type: 'public_application',
-      target_type: 'lead',
-      target_id: lead.id,
+      event_type: 'intake_created',
+      target_type: 'intake',
+      target_id: intake.id,
       metadata: {
         intent,
         tier: tier || null,
+        assigned_user_id: routing.assigned_user_id,
+        routing_reason: routing.reason,
       },
     })
 
-    return NextResponse.json({ success: true, id: lead.id })
+    return NextResponse.json({ success: true, id: intake.id })
   } catch (error) {
     console.error('Public apply API error:', error)
     return NextResponse.json(
@@ -79,4 +100,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

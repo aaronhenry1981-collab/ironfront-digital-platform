@@ -190,8 +190,43 @@ All API routes enforce org scoping:
 - `events` - Audit log
 - `interventions` - Operator interventions
 - `recommendations` - Atlas pattern detection recommendations
+- `intakes` - Application intake records (with routing and status)
+- `leads` - Legacy lead records (for backward compatibility)
 
 See `prisma/schema.prisma` for full schema definition.
+
+## Intake Flow
+
+### Overview
+
+The intake system routes public applications into operator-managed opportunities:
+
+1. **Application Submission** - Public applies via `/apply` page
+2. **Intake Creation** - System creates intake record with routing
+3. **Automatic Assignment** - Load-balanced assignment to operator pool
+4. **Operator Board** - Operators manage intakes via kanban board
+5. **Status Tracking** - Status updates tracked with timestamps
+6. **Owner Metrics** - Owners see system-level metrics only
+
+### Routing Rules
+
+- `intent=launch` → LaunchPath operator pool
+- `intent=scale` → Org Ops operator pool
+- `intent=ecosystems` → EEP concierge pool
+- If no operator available → unassigned queue
+
+### Status Flow
+
+- `new` → `contacted` → `qualified` → `closed` / `lost`
+
+### Atlas Escalation
+
+Atlas monitors for:
+- Unassigned intakes > 24 hours
+- First contact SLA breaches
+- Conversion rate drops
+
+Atlas only suggests escalation (no automation).
 
 ## Compliance
 
@@ -215,6 +250,8 @@ See `prisma/schema.prisma` for full schema definition.
 
 ### Protected Routes (Operator Console)
 
+- `/console/intake` - Intake Board (kanban-style intake management)
+- `/console/overview` - Owner Overview (system-level metrics, owner-only)
 - `/console/organization` - Organization Live View
 - `/console/segments` - Segments management
 - `/console/interventions` - Interventions tracking
@@ -231,6 +268,12 @@ See `prisma/schema.prisma` for full schema definition.
 
 All endpoints require authentication and org membership:
 
+- `GET /api/console/intakes` - List intakes (scoped by role)
+- `GET /api/console/intakes/[id]` - Get intake detail
+- `POST /api/console/intakes/[id]/status` - Update intake status
+- `POST /api/console/intakes/[id]/assign` - Assign/reassign intake (operators only)
+- `POST /api/console/intakes/[id]/notes` - Update intake notes
+- `GET /api/console/overview` - Owner metrics (owner-only)
 - `GET /api/orgs/[orgId]/graph` - Graph data (nodes + edges)
 - `GET /api/orgs/[orgId]/segments` - Computed segments
 - `GET /api/orgs/[orgId]/participants/[participantId]` - Participant detail

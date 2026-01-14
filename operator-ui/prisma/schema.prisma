@@ -23,6 +23,7 @@ model Org {
   interventions  Intervention[]
   recommendations Recommendation[]
   leads          Lead[]
+  intakes        Intake[]
 
   @@map("orgs")
 }
@@ -36,6 +37,7 @@ model User {
   operator_interventions Intervention[] @relation("OperatorInterventions")
   reverser_interventions Intervention[] @relation("ReverserInterventions")
   actor_events     Event[] @relation("ActorEvents")
+  assigned_intakes Intake[]
 
   @@map("users")
 }
@@ -171,5 +173,28 @@ model Lead {
   @@index([org_id, created_at])
   @@index([email, created_at])
   @@map("leads")
+}
+
+model Intake {
+  id                String    @id @default(uuid()) @db.Uuid
+  org_id            String?   @db.Uuid
+  name              String?   @db.Text
+  email             String    @db.Citext
+  intent            String    @db.Text // 'scale', 'launch', 'ecosystems'
+  preferences       Json?     @db.JsonB
+  status            String    @default("new") @db.Text // 'new', 'contacted', 'qualified', 'closed', 'lost'
+  assigned_user_id  String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  first_contact_at  DateTime? @db.Timestamptz(6)
+  last_activity_at  DateTime? @db.Timestamptz(6)
+  notes             String?   @db.Text
+
+  org            Org?  @relation(fields: [org_id], references: [id], onDelete: SetNull)
+  assigned_user  User? @relation(fields: [assigned_user_id], references: [id], onDelete: SetNull)
+
+  @@index([intent, status, created_at])
+  @@index([assigned_user_id, status])
+  @@index([created_at])
+  @@map("intakes")
 }
 
