@@ -375,91 +375,217 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/pricing") {
     return html(res, 200, page("Pricing", `
       <div class="hero">
-        <h1>Pricing Built for Real Businesses</h1>
-        <p>Clear, transparent pricing for individuals, operators, and organizations at every stage.</p>
+        <h1>Choose Your Path</h1>
+        <p>Select the pricing structure that matches where you are in your business journey.</p>
       </div>
       
       <div class="section-alt">
-        <h2>LaunchPath™</h2>
-        <p style="text-align:center;margin-bottom:32px;color:#d1d5db;">For individuals starting a business from zero</p>
-        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));max-width:1200px;">
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(400px,1fr));max-width:1000px;">
+          <a href="/pricing/launch" class="card card-link">
+            <h3>LaunchPath™</h3>
+            <p style="color:#d1d5db;margin:16px 0 24px;">For individuals starting a business from zero</p>
+            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View LaunchPath™ Pricing →</p>
+          </a>
+          <a href="/pricing/scale" class="card card-link">
+            <h3>Scale</h3>
+            <p style="color:#d1d5db;margin:16px 0 24px;">For existing businesses and leaders</p>
+            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View Scale Pricing →</p>
+          </a>
+        </div>
+      </div>
+    `));
+  }
+  
+  if (url.pathname === "/pricing/launch") {
+    return html(res, 200, page("LaunchPath™ Pricing", `
+      <div class="hero">
+        <h1>LaunchPath™ Pricing</h1>
+        <p>For individuals starting a business from zero. Choose the level of access and support that matches your commitment.</p>
+      </div>
+      
+      <div class="section-alt">
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1200px;">
           <div class="card">
             <h3>Individual Operator</h3>
             <div style="margin:24px 0;">
               <span style="font-size:48px;font-weight:600;color:#ffffff;">$99</span>
               <span style="color:#d1d5db;margin-left:8px;">/ month</span>
             </div>
-            <div style="margin-bottom:24px;">
+            <div style="margin-bottom:32px;">
               <span style="font-size:36px;font-weight:600;color:#ffffff;">$999</span>
               <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $189)</span>
             </div>
-            <p style="color:#d1d5db;margin-bottom:24px;">Foundational access to the operating platform with core systems and workflows.</p>
+            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
+            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
+              <li style="font-size:14px;">Foundational access to the operating platform</li>
+              <li style="font-size:14px;">Core systems and workflows</li>
+              <li style="font-size:14px;">Basic operational visibility</li>
+              <li style="font-size:14px;">Essential automation tools</li>
+              <li style="font-size:14px;">Email support</li>
+            </ul>
+            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Perfect for someone just starting out who wants structure without overwhelming complexity.</p>
             <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
           </div>
-          <div class="card" style="border-color:rgba(255,122,24,0.5);">
+          
+          <div class="card" style="border-color:rgba(255,122,24,0.6);border-width:2px;">
+            <div style="background:#ff7a18;color:#0b0b0d;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:16px;">MOST POPULAR</div>
             <h3>Builder</h3>
             <div style="margin:24px 0;">
               <span style="font-size:48px;font-weight:600;color:#ffffff;">$299</span>
               <span style="color:#d1d5db;margin-left:8px;">/ month</span>
             </div>
-            <div style="margin-bottom:24px;">
+            <div style="margin-bottom:32px;">
               <span style="font-size:36px;font-weight:600;color:#ffffff;">$2,999</span>
               <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $589)</span>
             </div>
-            <p style="color:#d1d5db;margin-bottom:24px;">Expanded tools and structured support for individuals actively building a business.</p>
+            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
+            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
+              <li style="font-size:14px;">Everything in Individual Operator</li>
+              <li style="font-size:14px;">Expanded automation and system tools</li>
+              <li style="font-size:14px;">Advanced operational visibility</li>
+              <li style="font-size:14px;">Structured support and guidance</li>
+              <li style="font-size:14px;">Priority email support</li>
+              <li style="font-size:14px;">Access to business-building workflows</li>
+            </ul>
+            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Ideal for someone actively building a business who needs more tools and structured support.</p>
             <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
           </div>
+          
           <div class="card">
             <h3>Advanced Operator</h3>
             <div style="margin:24px 0;">
               <span style="font-size:48px;font-weight:600;color:#ffffff;">$999</span>
               <span style="color:#d1d5db;margin-left:8px;">/ month</span>
             </div>
-            <div style="margin-bottom:24px;">
+            <div style="margin-bottom:32px;">
               <span style="font-size:36px;font-weight:600;color:#ffffff;">$9,999</span>
               <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $1,989)</span>
             </div>
-            <p style="color:#d1d5db;margin-bottom:24px;">Full platform access for high-activity operators managing serious volume.</p>
+            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
+            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
+              <li style="font-size:14px;">Everything in Builder</li>
+              <li style="font-size:14px;">Full platform access</li>
+              <li style="font-size:14px;">All automation and system tools</li>
+              <li style="font-size:14px;">Complete operational visibility</li>
+              <li style="font-size:14px;">High-volume capacity</li>
+              <li style="font-size:14px;">Priority support with faster response</li>
+              <li style="font-size:14px;">Advanced workflows and integrations</li>
+            </ul>
+            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">For serious operators managing high volume who need everything the platform offers.</p>
             <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
           </div>
         </div>
       </div>
       
       <div class="section">
-        <h2>Scale</h2>
-        <p style="text-align:center;margin-bottom:32px;color:#d1d5db;">For existing businesses and leaders</p>
-        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1000px;">
-          <div class="card">
-            <h3>Organization / Leader</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$599</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
-            </div>
-            <div style="margin-bottom:24px;">
-              <span style="font-size:36px;font-weight:600;color:#ffffff;">$5,999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
-            </div>
-            <p style="color:#d1d5db;margin-bottom:24px;">Organization-level access with visibility, governance, and team-level system support.</p>
-            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Apply for Access</a>
-          </div>
-          <div class="card">
-            <h3>Franchise License</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$10,000</span>
-            </div>
-            <div style="margin-bottom:24px;">
-              <span style="color:#d1d5db;font-size:14px;">One-time (3-year license)</span>
-            </div>
-            <p style="color:#d1d5db;margin-bottom:24px;">Licensed deployment of the Iron Front Digital platform under approved branding terms.</p>
-            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Request Franchise Access</a>
-          </div>
+        <div class="content-center">
+          <h2 style="margin-bottom:24px;">Why Choose LaunchPath™?</h2>
+          <p style="margin-bottom:16px;">LaunchPath™ is designed for individuals who are starting from zero and want a structured, guided path to building a real business.</p>
+          <p style="margin-bottom:16px;">Unlike trying to figure it out alone, LaunchPath™ gives you:</p>
+          <ul style="text-align:left;max-width:640px;margin:24px auto;">
+            <li>Proven systems and workflows that work</li>
+            <li>Operational infrastructure from day one</li>
+            <li>Clear structure instead of guesswork</li>
+            <li>Scalable foundation that grows with you</li>
+            <li>Support when you need it</li>
+          </ul>
+          <p style="margin-top:32px;color:#ffb26b;">All plans include access to the same core platform. Higher tiers unlock more tools, capacity, and support.</p>
         </div>
       </div>
       
       <div class="section-alt">
         <div class="content-center">
           <p style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;max-width:640px;margin:0 auto;">
-            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.
+            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront and save you money.
+          </p>
+        </div>
+      </div>
+    `));
+  }
+  
+  if (url.pathname === "/pricing/scale") {
+    return html(res, 200, page("Scale Pricing", `
+      <div class="hero">
+        <h1>Scale Pricing</h1>
+        <p>For existing businesses and leaders who need operational infrastructure, visibility, and team-level support.</p>
+      </div>
+      
+      <div class="section-alt">
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(400px,1fr));max-width:1000px;">
+          <div class="card">
+            <h3>Organization / Leader</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$599</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
+            </div>
+            <div style="margin-bottom:32px;">
+              <span style="font-size:36px;font-weight:600;color:#ffffff;">$5,999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $1,189)</span>
+            </div>
+            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
+            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
+              <li style="font-size:14px;">Organization-level platform access</li>
+              <li style="font-size:14px;">Team-level operational visibility</li>
+              <li style="font-size:14px;">Governance and oversight tools</li>
+              <li style="font-size:14px;">System support for distributed teams</li>
+              <li style="font-size:14px;">Multi-user access and permissions</li>
+              <li style="font-size:14px;">Priority support</li>
+              <li style="font-size:14px;">Advanced reporting and analytics</li>
+            </ul>
+            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Perfect for established businesses and leaders who need operational structure, team visibility, and consistent execution across their organization.</p>
+            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Apply for Access</a>
+          </div>
+          
+          <div class="card">
+            <h3>Franchise License</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$10,000</span>
+            </div>
+            <div style="margin-bottom:32px;">
+              <span style="color:#d1d5db;font-size:16px;">One-time payment</span>
+              <div style="color:#ff7a18;font-size:14px;margin-top:8px;">3-year license included</div>
+            </div>
+            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
+            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
+              <li style="font-size:14px;">Licensed deployment of the platform</li>
+              <li style="font-size:14px;">Approved branding and customization</li>
+              <li style="font-size:14px;">Full platform access for 3 years</li>
+              <li style="font-size:14px;">White-label options</li>
+              <li style="font-size:14px;">Dedicated support and onboarding</li>
+              <li style="font-size:14px;">Custom integration support</li>
+              <li style="font-size:14px;">Franchise partner benefits</li>
+            </ul>
+            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">For organizations that want to deploy the Iron Front Digital platform under their own branding with full licensing rights.</p>
+            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Request Franchise Access</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="content-center">
+          <h2 style="margin-bottom:24px;">Why Choose Scale?</h2>
+          <p style="margin-bottom:16px;">Scale is designed for existing businesses and leaders who already operate but need better structure, visibility, and team-level support.</p>
+          <p style="margin-bottom:16px;">Scale gives you:</p>
+          <ul style="text-align:left;max-width:640px;margin:24px auto;">
+            <li>Operational infrastructure without rebuilding</li>
+            <li>Team-level visibility and governance</li>
+            <li>Consistent execution across locations</li>
+            <li>System support for distributed operations</li>
+            <li>Multi-user access and permissions</li>
+            <li>Advanced reporting and oversight</li>
+          </ul>
+          <p style="margin-top:32px;color:#ffb26b;">Scale plans require application to ensure alignment and appropriate platform use for organizational needs.</p>
+        </div>
+      </div>
+      
+      <div class="section-alt">
+        <div class="content-center">
+          <p style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;max-width:640px;margin:0 auto;">
+            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront and save you money.
           </p>
         </div>
       </div>
@@ -583,6 +709,10 @@ const server = http.createServer((req, res) => {
       <div class="btn-group">
         <a href="/pricing" class="btn btn-primary">View Pricing</a>
         <a href="/apply" class="btn btn-secondary">Apply for Access</a>
+      </div>
+      <div style="margin-top:32px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
+        <a href="/pricing/launch" style="color:#ffb26b;font-size:14px;">LaunchPath™ Pricing →</a>
+        <a href="/pricing/scale" style="color:#ffb26b;font-size:14px;">Scale Pricing →</a>
       </div>
     </div>
     
