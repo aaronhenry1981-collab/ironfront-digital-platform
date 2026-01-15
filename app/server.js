@@ -183,12 +183,14 @@ function page(title, body) {
     .hero{text-align:center;padding:96px 0;max-width:896px;margin:0 auto}
     .hero h1{font-size:48px;margin-bottom:24px;color:#ffffff}
     .hero p{font-size:20px;color:#d1d5db;margin-bottom:40px;max-width:640px;margin-left:auto;margin-right:auto}
-    .btn{display:inline-block;padding:16px 32px;border-radius:8px;text-decoration:none;font-size:18px;font-weight:600;transition:all 0.2s;border:none;cursor:pointer}
+    .btn{display:inline-block;padding:16px 32px;border-radius:8px;text-decoration:none;font-size:18px;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
     .btn-primary{background:#ff7a18;color:#0b0b0d}
-    .btn-primary:hover{background:#ff8a2e;transform:translateY(-1px)}
+    .btn-primary:hover{background:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.3)}
     .btn-secondary{background:transparent;color:#ff7a18;border:2px solid #ff7a18}
-    .btn-secondary:hover{background:rgba(255,122,24,0.1)}
+    .btn-secondary:hover{background:rgba(255,122,24,0.15);border-color:#ff8a2e;color:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.2)}
     .btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+    .card-link{display:block;text-decoration:none;transition:all 0.2s}
+    .card-link:hover{transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2);border-color:rgba(255,122,24,0.3)}
     .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:32px;text-align:left}
     .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto}
     .card-center{text-align:center}
@@ -196,16 +198,18 @@ function page(title, body) {
     input{padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);width:100%;max-width:440px;font-size:16px;font-family:inherit;background:rgba(255,255,255,0.05);color:#eaeaea}
     input::placeholder{color:rgba(255,255,255,0.5)}
     input:focus{outline:none;border-color:#ff7a18;box-shadow:0 0 0 3px rgba(255,122,24,0.2)}
-    button{padding:14px 28px;border-radius:8px;border:none;background:#ff7a18;color:#0b0b0d;font-weight:600;font-size:16px;cursor:pointer;transition:all 0.2s;width:100%;max-width:440px}
-    button:hover{background:#ff8a2e;transform:translateY(-1px)}
+    button{padding:14px 28px;border-radius:8px;border:none;background:#ff7a18;color:#0b0b0d;font-weight:600;font-size:16px;cursor:pointer;transition:all 0.2s;width:100%;max-width:440px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+    button:hover{background:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.3)}
     ul{list-style:none;padding:0;margin:0;max-width:640px;margin-left:auto;margin-right:auto;text-align:left}
     li{display:flex;align-items:start;margin:16px 0;color:#d1d5db;line-height:1.75;font-size:16px}
     li:before{content:"•";color:#ff7a18;margin-right:16px;font-size:24px;line-height:1;font-weight:bold}
     .footer-note{padding:48px 0;border-top:1px solid rgba(255,255,255,0.12);text-align:center;margin-top:64px}
     .footer-note p{font-size:14px;color:rgba(255,255,255,0.6);margin:0;max-width:640px;margin-left:auto;margin-right:auto}
     .small{font-size:12px;color:rgba(255,255,255,0.4);text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08)}
-    a{color:#ffb26b;text-decoration:none}
+    a{color:#ffb26b;text-decoration:none;transition:color 0.2s}
     a:hover{color:#ff7a18;text-decoration:none}
+    .card h3{color:#ffffff;cursor:default}
+    .card p{color:#d1d5db}
     .content-center{max-width:768px;margin:0 auto;text-align:left}
     @media (max-width:640px){
       .hero h1{font-size:36px}
@@ -368,6 +372,40 @@ const server = http.createServer((req, res) => {
     url.pathname = "/biab";
   }
   
+  if (url.pathname === "/pricing") {
+    return html(res, 200, page("Pricing", `
+      <div class="hero">
+        <h1>Pricing</h1>
+        <p>Choose the path that fits your needs. All plans include access to our operational platform.</p>
+        <div style="margin-top:48px;">
+          <div class="btn-group">
+            <a href="/scale" class="btn btn-primary">View Scale Options</a>
+            <a href="/launch" class="btn btn-secondary">View Launch Options</a>
+          </div>
+        </div>
+      </div>
+    `));
+  }
+  
+  if (url.pathname === "/apply") {
+    return html(res, 200, page("Apply", `
+      <div class="hero">
+        <h1>Apply for Access</h1>
+        <p style="max-width:640px;margin:0 auto 32px;">Select your path to get started.</p>
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:800px;">
+          <a href="/scale" class="card card-link">
+            <h3>Scale an Existing Business</h3>
+            <p>For established businesses and organizations.</p>
+          </a>
+          <a href="/launch" class="card card-link">
+            <h3>Start a Business</h3>
+            <p>For individuals starting from zero.</p>
+          </a>
+        </div>
+      </div>
+    `));
+  }
+  
   if (url.pathname === "/mlm" || url.pathname === "/biab") {
     const source = url.pathname.replace("/", "");
     return html(res, 200, page("Apply", `
@@ -380,8 +418,11 @@ const server = http.createServer((req, res) => {
         <form method="POST" action="/apply" style="max-width:440px;margin:0 auto;">
           <input type="hidden" name="source" value="${source}" />
           <input required type="email" name="email" placeholder="Your email" style="margin-bottom:16px;" />
-          <button type="submit" style="width:100%;">Apply</button>
+          <button type="submit" style="width:100%;">Apply Now</button>
         </form>
+        <div style="margin-top:24px;">
+          <a href="/" style="color:#ffb26b;font-size:14px;">← Back to Home</a>
+        </div>
       </div>
     `));
   }
@@ -408,18 +449,18 @@ const server = http.createServer((req, res) => {
     <div class="section">
       <h2>Who This Is For</h2>
       <div class="card-grid">
-        <div class="card">
+        <a href="/scale" class="card card-link">
           <h3>Existing Business Operators</h3>
           <p>For people who already run businesses and need better operational structure, visibility, and automation.</p>
-        </div>
-        <div class="card">
+        </a>
+        <a href="/launch" class="card card-link">
           <h3>Starting From Zero</h3>
           <p>For people starting a business from zero who want structure, systems, and guidance rather than guesswork.</p>
-        </div>
-        <div class="card">
+        </a>
+        <a href="/scale" class="card card-link">
           <h3>Distributed Teams</h3>
           <p>For organizations managing distributed teams who need operational visibility and consistent execution across locations.</p>
-        </div>
+        </a>
       </div>
     </div>
     
@@ -440,12 +481,16 @@ const server = http.createServer((req, res) => {
           <div class="step-number">1</div>
           <h3>Choose a Path</h3>
           <p>Select Scale for existing businesses or Launch for starting from zero.</p>
+          <div style="margin-top:20px;">
+            <a href="/scale" class="btn btn-primary" style="font-size:14px;padding:10px 20px;">Scale</a>
+            <a href="/launch" class="btn btn-secondary" style="font-size:14px;padding:10px 20px;margin-left:8px;">Launch</a>
+          </div>
         </div>
-        <div class="card card-center">
+        <a href="/apply" class="card card-link card-center">
           <div class="step-number">2</div>
           <h3>Apply for Access</h3>
           <p>Complete the application process to ensure alignment and appropriate platform use.</p>
-        </div>
+        </a>
         <div class="card card-center">
           <div class="step-number">3</div>
           <h3>Operate Within the Platform</h3>
