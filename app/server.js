@@ -375,13 +375,92 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/pricing") {
     return html(res, 200, page("Pricing", `
       <div class="hero">
-        <h1>Pricing</h1>
-        <p>Choose the path that fits your needs. All plans include access to our operational platform.</p>
-        <div style="margin-top:48px;">
-          <div class="btn-group">
-            <a href="/scale" class="btn btn-primary">View Scale Options</a>
-            <a href="/launch" class="btn btn-secondary">View Launch Options</a>
+        <h1>Pricing Built for Real Businesses</h1>
+        <p>Clear, transparent pricing for individuals, operators, and organizations at every stage.</p>
+      </div>
+      
+      <div class="section-alt">
+        <h2>LaunchPath™</h2>
+        <p style="text-align:center;margin-bottom:32px;color:#d1d5db;">For individuals starting a business from zero</p>
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));max-width:1200px;">
+          <div class="card">
+            <h3>Individual Operator</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$99</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
+            </div>
+            <div style="margin-bottom:24px;">
+              <span style="font-size:36px;font-weight:600;color:#ffffff;">$999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+            </div>
+            <p style="color:#d1d5db;margin-bottom:24px;">Foundational access to the operating platform with core systems and workflows.</p>
+            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
           </div>
+          <div class="card" style="border-color:rgba(255,122,24,0.5);">
+            <h3>Builder</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$299</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
+            </div>
+            <div style="margin-bottom:24px;">
+              <span style="font-size:36px;font-weight:600;color:#ffffff;">$2,999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+            </div>
+            <p style="color:#d1d5db;margin-bottom:24px;">Expanded tools and structured support for individuals actively building a business.</p>
+            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
+          </div>
+          <div class="card">
+            <h3>Advanced Operator</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
+            </div>
+            <div style="margin-bottom:24px;">
+              <span style="font-size:36px;font-weight:600;color:#ffffff;">$9,999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+            </div>
+            <p style="color:#d1d5db;margin-bottom:24px;">Full platform access for high-activity operators managing serious volume.</p>
+            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2>Scale</h2>
+        <p style="text-align:center;margin-bottom:32px;color:#d1d5db;">For existing businesses and leaders</p>
+        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1000px;">
+          <div class="card">
+            <h3>Organization / Leader</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$599</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
+            </div>
+            <div style="margin-bottom:24px;">
+              <span style="font-size:36px;font-weight:600;color:#ffffff;">$5,999</span>
+              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
+            </div>
+            <p style="color:#d1d5db;margin-bottom:24px;">Organization-level access with visibility, governance, and team-level system support.</p>
+            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Apply for Access</a>
+          </div>
+          <div class="card">
+            <h3>Franchise License</h3>
+            <div style="margin:24px 0;">
+              <span style="font-size:48px;font-weight:600;color:#ffffff;">$10,000</span>
+            </div>
+            <div style="margin-bottom:24px;">
+              <span style="color:#d1d5db;font-size:14px;">One-time (3-year license)</span>
+            </div>
+            <p style="color:#d1d5db;margin-bottom:24px;">Licensed deployment of the Iron Front Digital platform under approved branding terms.</p>
+            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Request Franchise Access</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section-alt">
+        <div class="content-center">
+          <p style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;max-width:640px;margin:0 auto;">
+            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.
+          </p>
         </div>
       </div>
     `));
