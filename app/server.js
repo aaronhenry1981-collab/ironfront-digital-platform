@@ -338,9 +338,74 @@ const server = http.createServer((req, res) => {
   }
 
   return html(res, 200, page("Iron Front Digital", `
-    <h1>Build. Scale. Operate.</h1>
-    <p>Select your path:</p>
-    <p><a href="/mlm">I have an existing business</a> • <a href="/biab">I want to start a business</a></p>
+    <h1>The Platform That Runs the Business Behind the Business</h1>
+    <p>Iron Front Digital provides operational infrastructure for people building, scaling, or managing real businesses.</p>
+    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="/scale" style="display:inline-block;padding:12px 24px;background:#ff7a18;color:#0b0b0d;text-decoration:none;border-radius:8px;font-weight:600;">Scale an Existing Business</a>
+      <a href="/launch" style="display:inline-block;padding:12px 24px;background:transparent;color:#ff7a18;text-decoration:none;border:2px solid #ff7a18;border-radius:8px;font-weight:600;">Start a Business With Structure</a>
+    </div>
+    <div style="margin-top:48px;">
+      <h2 style="font-size:28px;margin-bottom:16px;">What This Platform Is</h2>
+      <p>Operational software and infrastructure designed to support long-term business operations.</p>
+      <p>Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.</p>
+      <p>Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.</p>
+    </div>
+    <div style="margin-top:48px;">
+      <h2 style="font-size:28px;margin-bottom:16px;">Who This Is For</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px;">
+        <div class="card">
+          <h3 style="margin-top:0;font-size:18px;">Existing Business Operators</h3>
+          <p style="font-size:14px;opacity:.9;">For people who already run businesses and need better operational structure, visibility, and automation.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;font-size:18px;">Starting From Zero</h3>
+          <p style="font-size:14px;opacity:.9;">For people starting a business from zero who want structure, systems, and guidance rather than guesswork.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;font-size:18px;">Distributed Teams</h3>
+          <p style="font-size:14px;opacity:.9;">For organizations managing distributed teams who need operational visibility and consistent execution across locations.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:48px;">
+      <h2 style="font-size:28px;margin-bottom:16px;">What This Is Not</h2>
+      <ul style="list-style:none;padding:0;">
+        <li style="margin:8px 0;">• Not an MLM</li>
+        <li style="margin:8px 0;">• Not a business opportunity</li>
+        <li style="margin:8px 0;">• No income guarantees</li>
+        <li style="margin:8px 0;">• No recruiting promises</li>
+      </ul>
+    </div>
+    <div style="margin-top:48px;">
+      <h2 style="font-size:28px;margin-bottom:16px;">How It Works</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px;">
+        <div class="card" style="text-align:center;">
+          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">1</div>
+          <h3 style="margin-top:0;font-size:16px;">Choose a Path</h3>
+          <p style="font-size:14px;opacity:.9;">Select Scale for existing businesses or Launch for starting from zero.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">2</div>
+          <h3 style="margin-top:0;font-size:16px;">Apply for Access</h3>
+          <p style="font-size:14px;opacity:.9;">Complete the application process to ensure alignment and appropriate platform use.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">3</div>
+          <h3 style="margin-top:0;font-size:16px;">Operate Within the Platform</h3>
+          <p style="font-size:14px;opacity:.9;">Use the operational tools, systems, and visibility features to run your business.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:48px;text-align:center;">
+      <h2 style="font-size:28px;margin-bottom:24px;">Built for People Who Intend to Operate, Not Experiment</h2>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="/pricing" style="display:inline-block;padding:12px 24px;background:#ff7a18;color:#0b0b0d;text-decoration:none;border-radius:8px;font-weight:600;">View Pricing</a>
+        <a href="/apply" style="display:inline-block;padding:12px 24px;background:transparent;color:#ff7a18;text-decoration:none;border:2px solid #ff7a18;border-radius:8px;font-weight:600;">Apply for Access</a>
+      </div>
+    </div>
+    <div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12);text-align:center;">
+      <p style="font-size:13px;opacity:.6;">Iron Front Digital provides software and infrastructure. Outcomes depend on execution and external factors.</p>
+    </div>
   `));
 });
 
