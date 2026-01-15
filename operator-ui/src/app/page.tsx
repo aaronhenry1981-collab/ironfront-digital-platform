@@ -3,153 +3,202 @@
 import Link from 'next/link'
 import PublicLayout from '@/components/public/PublicLayout'
 
-export default function HomePage() {
+export default function Page() {
   return (
     <PublicLayout>
-      {/* 1️⃣ HERO SECTION */}
-      <section className="bg-white py-24 sm:py-32">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl sm:text-6xl font-medium text-gray-900 mb-7 leading-tight">
-            The Platform That Runs the Business Behind the Business
-          </h1>
-          <p className="text-xl sm:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Iron Front Digital provides the systems, automation, and operational visibility required to build and scale real businesses — without chaos or guesswork.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/scale"
-              className="px-8 py-4 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors touch-manipulation"
-            >
-              Scale My Business
-            </Link>
-            <Link
-              href="/launch"
-              className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-md text-lg font-medium hover:bg-gray-50 transition-colors touch-manipulation"
-            >
-              Start a Business
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 2️⃣ TRUST ANCHOR STRIP */}
-      <section className="bg-gray-50 py-12 border-y border-gray-200">
+      {/* 1) Hero Section */}
+      <section className="bg-white py-20 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-8 h-8 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-900">Built for long-term operations</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-8 h-8 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-900">Compliance-first infrastructure</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-8 h-8 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-900">Scales without breaking</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-8 h-8 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-900">Designed for real businesses</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3️⃣ WHAT WE DO (4-CARD GRID) */}
-      <section className="bg-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-            <div className="text-center">
-              <div className="mb-4">
-                <svg className="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Systems & Automation</h3>
-              <p className="text-sm text-gray-600">Replace manual work with repeatable systems.</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-4">
-                <svg className="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Operational Visibility</h3>
-              <p className="text-sm text-gray-600">See what's happening without micromanaging.</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-4">
-                <svg className="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Scalable Infrastructure</h3>
-              <p className="text-sm text-gray-600">Grow without rebuilding your business every stage.</p>
-            </div>
-            <div className="text-center">
-              <div className="mb-4">
-                <svg className="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Governance & Oversight</h3>
-              <p className="text-sm text-gray-600">Stay compliant, auditable, and controlled.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4️⃣ PATH SELECTION */}
-      <section className="bg-gray-50 py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Scale Card */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-10 hover:border-gray-300 transition-colors">
-              <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-5">Scale</h2>
-              <p className="text-gray-600 mb-8 leading-relaxed text-base">
-                For existing businesses and leaders who want structure, clarity, and systemized execution.
-              </p>
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-gray-900 mb-6 leading-tight">
+              The Platform That Runs the Business Behind the Business
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-600 mb-10 leading-relaxed">
+              Iron Front Digital provides operational infrastructure for people building, scaling, or managing real businesses.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/scale"
-                className="inline-block px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors"
+                className="px-8 py-4 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors touch-manipulation"
               >
-                Explore Scale
+                Scale an Existing Business
               </Link>
-            </div>
-
-            {/* Launch Card */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-10 hover:border-gray-300 transition-colors">
-              <h2 className="text-2xl sm:text-3xl font-medium text-gray-900 mb-5">Launch</h2>
-              <p className="text-gray-600 mb-8 leading-relaxed text-base">
-                For individuals starting from zero who want a guided, structured path to business ownership.
-              </p>
               <Link
                 href="/launch"
-                className="inline-block px-6 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors"
+                className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-md text-lg font-medium hover:bg-gray-50 transition-colors touch-manipulation"
               >
-                Explore LaunchPath™
+                Start a Business With Structure
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 2) What This Is */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-8 text-center">
+            What This Platform Is
+          </h2>
+          <div className="max-w-3xl mx-auto space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              Operational software and infrastructure designed to support long-term business operations.
+            </p>
+            <p>
+              Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.
+            </p>
+            <p>
+              Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 3) Who This Is For */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-12 text-center">
+            Who This Is For
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-gray-50 rounded-lg p-8 border border-gray-200">
+              <h3 className="text-xl font-medium text-gray-900 mb-4">
+                Existing Business Operators
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                For people who already run businesses and need better operational structure, visibility, and automation.
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-8 border border-gray-200">
+              <h3 className="text-xl font-medium text-gray-900 mb-4">
+                Starting From Zero
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                For people starting a business from zero who want structure, systems, and guidance rather than guesswork.
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-8 border border-gray-200">
+              <h3 className="text-xl font-medium text-gray-900 mb-4">
+                Distributed Teams
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                For organizations managing distributed teams who need operational visibility and consistent execution across locations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4) What This Is Not */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-8 text-center">
+            What This Is Not
+          </h2>
+          <div className="max-w-3xl mx-auto">
+            <ul className="space-y-3 text-gray-700 leading-relaxed">
+              <li className="flex items-start">
+                <span className="mr-3 text-gray-400">•</span>
+                <span>Not an MLM</span>
+              </li>
+              <li className="flex items-start">
+                <span className="mr-3 text-gray-400">•</span>
+                <span>Not a business opportunity</span>
+              </li>
+              <li className="flex items-start">
+                <span className="mr-3 text-gray-400">•</span>
+                <span>No income guarantees</span>
+              </li>
+              <li className="flex items-start">
+                <span className="mr-3 text-gray-400">•</span>
+                <span>No recruiting promises</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 5) How It Works */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-12 text-center">
+            How It Works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="text-center">
+              <div className="mb-4">
+                <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center text-xl font-medium mx-auto">
+                  1
+                </div>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                Choose a Path
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Select Scale for existing businesses or Launch for starting from zero.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mb-4">
+                <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center text-xl font-medium mx-auto">
+                  2
+                </div>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                Apply for Access
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Complete the application process to ensure alignment and appropriate platform use.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mb-4">
+                <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center text-xl font-medium mx-auto">
+                  3
+                </div>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                Operate Within the Platform
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Use the operational tools, systems, and visibility features to run your business.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6) Final CTA Section */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-medium text-gray-900 mb-8">
+              Built for People Who Intend to Operate, Not Experiment
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/pricing"
+                className="px-8 py-4 bg-gray-900 text-white rounded-md text-lg font-medium hover:bg-gray-800 transition-colors touch-manipulation"
+              >
+                View Pricing
+              </Link>
+              <Link
+                href="/apply"
+                className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-900 rounded-md text-lg font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+              >
+                Apply for Access
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7) Footer Note */}
+      <section className="bg-white py-12 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm text-gray-500 text-center leading-relaxed">
+            Iron Front Digital provides software and infrastructure. Outcomes depend on execution and external factors.
+          </p>
         </div>
       </section>
     </PublicLayout>
