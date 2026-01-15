@@ -321,6 +321,14 @@ const server = http.createServer((req, res) => {
   }
 
   // ----- Pages -----
+  // Map /scale to /mlm and /launch to /biab for consistency
+  if (url.pathname === "/scale") {
+    url.pathname = "/mlm";
+  }
+  if (url.pathname === "/launch") {
+    url.pathname = "/biab";
+  }
+  
   if (url.pathname === "/mlm" || url.pathname === "/biab") {
     const source = url.pathname.replace("/", "");
     return html(res, 200, page("Apply", `
