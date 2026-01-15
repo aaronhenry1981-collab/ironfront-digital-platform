@@ -171,15 +171,47 @@ function page(title, body) {
   return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>${title}</title>
   <style>
-    body{margin:0;background:#0b0b0d;color:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto}
-    .wrap{max-width:1020px;margin:60px auto;padding:0 24px}
-    h1{font-size:44px;margin:0 0 12px}
-    p{font-size:16px;opacity:.9;line-height:1.6}
-    .card{margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.03)}
-    input{padding:12px;border-radius:10px;border:none;width:100%;max-width:440px}
-    button{margin-top:14px;padding:12px 20px;border-radius:10px;border:none;background:#ff7a18;font-weight:700}
-    .small{opacity:.6;font-size:13px;margin-top:30px}
-    a{color:#ffb26b}
+    *{box-sizing:border-box}
+    body{margin:0;background:#ffffff;color:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+    h1{font-size:36px;font-weight:500;margin:0 0 16px;color:#111827;line-height:1.2}
+    h2{font-size:30px;font-weight:500;margin:0 0 24px;color:#111827;line-height:1.3}
+    h3{font-size:20px;font-weight:500;margin:0 0 12px;color:#111827}
+    p{font-size:16px;color:#374151;line-height:1.75;margin:0 0 16px}
+    .section{padding:80px 0}
+    .section-alt{background:#f9fafb;padding:80px 0}
+    .hero{text-align:center;padding:96px 0;max-width:896px;margin:0 auto}
+    .hero h1{font-size:48px;margin-bottom:24px}
+    .hero p{font-size:20px;color:#4b5563;margin-bottom:40px}
+    .btn{display:inline-block;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:500;transition:all 0.2s;border:none;cursor:pointer}
+    .btn-primary{background:#111827;color:#ffffff}
+    .btn-primary:hover{background:#1f2937}
+    .btn-secondary{background:#ffffff;color:#111827;border:2px solid #111827}
+    .btn-secondary:hover{background:#f9fafb}
+    .btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+    .card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:32px;margin-top:16px}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px}
+    .card-center{text-align:center}
+    .step-number{width:48px;height:48px;background:#111827;color:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;margin:0 auto 16px}
+    input{padding:12px 16px;border-radius:6px;border:1px solid #d1d5db;width:100%;max-width:440px;font-size:16px;font-family:inherit}
+    input:focus{outline:none;border-color:#111827;box-shadow:0 0 0 3px rgba(17,24,39,0.1)}
+    button{padding:12px 24px;border-radius:6px;border:none;background:#111827;color:#ffffff;font-weight:600;font-size:16px;cursor:pointer;transition:background 0.2s}
+    button:hover{background:#1f2937}
+    ul{list-style:none;padding:0;margin:0}
+    li{display:flex;align-items:start;margin:12px 0;color:#374151;line-height:1.75}
+    li:before{content:"•";color:#9ca3af;margin-right:12px;font-size:20px;line-height:1}
+    .footer-note{padding:48px 0;border-top:1px solid #e5e7eb;text-align:center;margin-top:48px}
+    .footer-note p{font-size:14px;color:#6b7280;margin:0}
+    .small{font-size:12px;color:#9ca3af;text-align:center;margin-top:48px;padding-top:24px;border-top:1px solid #e5e7eb}
+    a{color:#111827;text-decoration:none}
+    a:hover{text-decoration:underline}
+    @media (max-width:640px){
+      .hero h1{font-size:36px}
+      .hero p{font-size:18px}
+      .section,.section-alt{padding:48px 0}
+      .btn-group{flex-direction:column}
+      .btn{width:100%;text-align:center}
+    }
   </style>
   </head><body><div class="wrap">${body}<div class="small">Iron Front Digital • v${VERSION}</div></div></body></html>`;
 }
@@ -346,73 +378,87 @@ const server = http.createServer((req, res) => {
   }
 
   return html(res, 200, page("Iron Front Digital", `
-    <h1>The Platform That Runs the Business Behind the Business</h1>
-    <p>Iron Front Digital provides operational infrastructure for people building, scaling, or managing real businesses.</p>
-    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-      <a href="/scale" style="display:inline-block;padding:12px 24px;background:#ff7a18;color:#0b0b0d;text-decoration:none;border-radius:8px;font-weight:600;">Scale an Existing Business</a>
-      <a href="/launch" style="display:inline-block;padding:12px 24px;background:transparent;color:#ff7a18;text-decoration:none;border:2px solid #ff7a18;border-radius:8px;font-weight:600;">Start a Business With Structure</a>
+    <div class="hero">
+      <h1>The Platform That Runs the Business Behind the Business</h1>
+      <p>Iron Front Digital provides operational infrastructure for people building, scaling, or managing real businesses.</p>
+      <div class="btn-group">
+        <a href="/scale" class="btn btn-primary">Scale an Existing Business</a>
+        <a href="/launch" class="btn btn-secondary">Start a Business With Structure</a>
+      </div>
     </div>
-    <div style="margin-top:48px;">
-      <h2 style="font-size:28px;margin-bottom:16px;">What This Platform Is</h2>
-      <p>Operational software and infrastructure designed to support long-term business operations.</p>
-      <p>Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.</p>
-      <p>Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.</p>
+    
+    <div class="section-alt">
+      <h2 style="text-align:center;">What This Platform Is</h2>
+      <div style="max-width:768px;margin:0 auto;">
+        <p>Operational software and infrastructure designed to support long-term business operations.</p>
+        <p>Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.</p>
+        <p>Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.</p>
+      </div>
     </div>
-    <div style="margin-top:48px;">
-      <h2 style="font-size:28px;margin-bottom:16px;">Who This Is For</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px;">
+    
+    <div class="section">
+      <h2 style="text-align:center;">Who This Is For</h2>
+      <div class="card-grid">
         <div class="card">
-          <h3 style="margin-top:0;font-size:18px;">Existing Business Operators</h3>
-          <p style="font-size:14px;opacity:.9;">For people who already run businesses and need better operational structure, visibility, and automation.</p>
+          <h3>Existing Business Operators</h3>
+          <p>For people who already run businesses and need better operational structure, visibility, and automation.</p>
         </div>
         <div class="card">
-          <h3 style="margin-top:0;font-size:18px;">Starting From Zero</h3>
-          <p style="font-size:14px;opacity:.9;">For people starting a business from zero who want structure, systems, and guidance rather than guesswork.</p>
+          <h3>Starting From Zero</h3>
+          <p>For people starting a business from zero who want structure, systems, and guidance rather than guesswork.</p>
         </div>
         <div class="card">
-          <h3 style="margin-top:0;font-size:18px;">Distributed Teams</h3>
-          <p style="font-size:14px;opacity:.9;">For organizations managing distributed teams who need operational visibility and consistent execution across locations.</p>
+          <h3>Distributed Teams</h3>
+          <p>For organizations managing distributed teams who need operational visibility and consistent execution across locations.</p>
         </div>
       </div>
     </div>
-    <div style="margin-top:48px;">
-      <h2 style="font-size:28px;margin-bottom:16px;">What This Is Not</h2>
-      <ul style="list-style:none;padding:0;">
-        <li style="margin:8px 0;">• Not an MLM</li>
-        <li style="margin:8px 0;">• Not a business opportunity</li>
-        <li style="margin:8px 0;">• No income guarantees</li>
-        <li style="margin:8px 0;">• No recruiting promises</li>
-      </ul>
+    
+    <div class="section-alt">
+      <h2 style="text-align:center;">What This Is Not</h2>
+      <div style="max-width:768px;margin:0 auto;">
+        <ul>
+          <li>Not an MLM</li>
+          <li>Not a business opportunity</li>
+          <li>No income guarantees</li>
+          <li>No recruiting promises</li>
+        </ul>
+      </div>
     </div>
-    <div style="margin-top:48px;">
-      <h2 style="font-size:28px;margin-bottom:16px;">How It Works</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px;">
-        <div class="card" style="text-align:center;">
-          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">1</div>
-          <h3 style="margin-top:0;font-size:16px;">Choose a Path</h3>
-          <p style="font-size:14px;opacity:.9;">Select Scale for existing businesses or Launch for starting from zero.</p>
+    
+    <div class="section">
+      <h2 style="text-align:center;">How It Works</h2>
+      <div class="card-grid">
+        <div class="card card-center">
+          <div class="step-number">1</div>
+          <h3>Choose a Path</h3>
+          <p>Select Scale for existing businesses or Launch for starting from zero.</p>
         </div>
-        <div class="card" style="text-align:center;">
-          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">2</div>
-          <h3 style="margin-top:0;font-size:16px;">Apply for Access</h3>
-          <p style="font-size:14px;opacity:.9;">Complete the application process to ensure alignment and appropriate platform use.</p>
+        <div class="card card-center">
+          <div class="step-number">2</div>
+          <h3>Apply for Access</h3>
+          <p>Complete the application process to ensure alignment and appropriate platform use.</p>
         </div>
-        <div class="card" style="text-align:center;">
-          <div style="width:48px;height:48px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 12px;">3</div>
-          <h3 style="margin-top:0;font-size:16px;">Operate Within the Platform</h3>
-          <p style="font-size:14px;opacity:.9;">Use the operational tools, systems, and visibility features to run your business.</p>
+        <div class="card card-center">
+          <div class="step-number">3</div>
+          <h3>Operate Within the Platform</h3>
+          <p>Use the operational tools, systems, and visibility features to run your business.</p>
         </div>
       </div>
     </div>
-    <div style="margin-top:48px;text-align:center;">
-      <h2 style="font-size:28px;margin-bottom:24px;">Built for People Who Intend to Operate, Not Experiment</h2>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="/pricing" style="display:inline-block;padding:12px 24px;background:#ff7a18;color:#0b0b0d;text-decoration:none;border-radius:8px;font-weight:600;">View Pricing</a>
-        <a href="/apply" style="display:inline-block;padding:12px 24px;background:transparent;color:#ff7a18;text-decoration:none;border:2px solid #ff7a18;border-radius:8px;font-weight:600;">Apply for Access</a>
+    
+    <div class="section-alt">
+      <div style="text-align:center;max-width:768px;margin:0 auto;">
+        <h2>Built for People Who Intend to Operate, Not Experiment</h2>
+        <div class="btn-group">
+          <a href="/pricing" class="btn btn-primary">View Pricing</a>
+          <a href="/apply" class="btn btn-secondary">Apply for Access</a>
+        </div>
       </div>
     </div>
-    <div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12);text-align:center;">
-      <p style="font-size:13px;opacity:.6;">Iron Front Digital provides software and infrastructure. Outcomes depend on execution and external factors.</p>
+    
+    <div class="footer-note">
+      <p>Iron Front Digital provides software and infrastructure. Outcomes depend on execution and external factors.</p>
     </div>
   `));
 });
