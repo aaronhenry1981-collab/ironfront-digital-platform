@@ -172,45 +172,50 @@ function page(title, body) {
   <title>${title}</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#ffffff;color:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
-    .wrap{max-width:1280px;margin:0 auto;padding:0 16px}
-    h1{font-size:36px;font-weight:500;margin:0 0 16px;color:#111827;line-height:1.2}
-    h2{font-size:30px;font-weight:500;margin:0 0 24px;color:#111827;line-height:1.3}
-    h3{font-size:20px;font-weight:500;margin:0 0 12px;color:#111827}
-    p{font-size:16px;color:#374151;line-height:1.75;margin:0 0 16px}
-    .section{padding:80px 0}
-    .section-alt{background:#f9fafb;padding:80px 0}
+    body{margin:0;background:#0b0b0d;color:#eaeaea;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+    h1{font-size:44px;font-weight:500;margin:0 0 16px;color:#ffffff;line-height:1.2}
+    h2{font-size:36px;font-weight:500;margin:0 0 32px;color:#ffffff;line-height:1.3;text-align:center}
+    h3{font-size:20px;font-weight:500;margin:0 0 12px;color:#ffffff}
+    p{font-size:16px;color:#d1d5db;line-height:1.75;margin:0 0 16px}
+    .section{padding:80px 0;text-align:center}
+    .section-alt{background:rgba(255,255,255,0.02);padding:80px 0;text-align:center}
     .hero{text-align:center;padding:96px 0;max-width:896px;margin:0 auto}
-    .hero h1{font-size:48px;margin-bottom:24px}
-    .hero p{font-size:20px;color:#4b5563;margin-bottom:40px}
-    .btn{display:inline-block;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:500;transition:all 0.2s;border:none;cursor:pointer}
-    .btn-primary{background:#111827;color:#ffffff}
-    .btn-primary:hover{background:#1f2937}
-    .btn-secondary{background:#ffffff;color:#111827;border:2px solid #111827}
-    .btn-secondary:hover{background:#f9fafb}
-    .btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px}
-    .card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:32px;margin-top:16px}
-    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px}
+    .hero h1{font-size:48px;margin-bottom:24px;color:#ffffff}
+    .hero p{font-size:20px;color:#d1d5db;margin-bottom:40px;max-width:640px;margin-left:auto;margin-right:auto}
+    .btn{display:inline-block;padding:16px 32px;border-radius:8px;text-decoration:none;font-size:18px;font-weight:600;transition:all 0.2s;border:none;cursor:pointer}
+    .btn-primary{background:#ff7a18;color:#0b0b0d}
+    .btn-primary:hover{background:#ff8a2e;transform:translateY(-1px)}
+    .btn-secondary{background:transparent;color:#ff7a18;border:2px solid #ff7a18}
+    .btn-secondary:hover{background:rgba(255,122,24,0.1)}
+    .btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:32px;text-align:left}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto}
     .card-center{text-align:center}
-    .step-number{width:48px;height:48px;background:#111827;color:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;margin:0 auto 16px}
-    input{padding:12px 16px;border-radius:6px;border:1px solid #d1d5db;width:100%;max-width:440px;font-size:16px;font-family:inherit}
-    input:focus{outline:none;border-color:#111827;box-shadow:0 0 0 3px rgba(17,24,39,0.1)}
-    button{padding:12px 24px;border-radius:6px;border:none;background:#111827;color:#ffffff;font-weight:600;font-size:16px;cursor:pointer;transition:background 0.2s}
-    button:hover{background:#1f2937}
-    ul{list-style:none;padding:0;margin:0}
-    li{display:flex;align-items:start;margin:12px 0;color:#374151;line-height:1.75}
-    li:before{content:"•";color:#9ca3af;margin-right:12px;font-size:20px;line-height:1}
-    .footer-note{padding:48px 0;border-top:1px solid #e5e7eb;text-align:center;margin-top:48px}
-    .footer-note p{font-size:14px;color:#6b7280;margin:0}
-    .small{font-size:12px;color:#9ca3af;text-align:center;margin-top:48px;padding-top:24px;border-top:1px solid #e5e7eb}
-    a{color:#111827;text-decoration:none}
-    a:hover{text-decoration:underline}
+    .step-number{width:56px;height:56px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 20px}
+    input{padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);width:100%;max-width:440px;font-size:16px;font-family:inherit;background:rgba(255,255,255,0.05);color:#eaeaea}
+    input::placeholder{color:rgba(255,255,255,0.5)}
+    input:focus{outline:none;border-color:#ff7a18;box-shadow:0 0 0 3px rgba(255,122,24,0.2)}
+    button{padding:14px 28px;border-radius:8px;border:none;background:#ff7a18;color:#0b0b0d;font-weight:600;font-size:16px;cursor:pointer;transition:all 0.2s;width:100%;max-width:440px}
+    button:hover{background:#ff8a2e;transform:translateY(-1px)}
+    ul{list-style:none;padding:0;margin:0;max-width:640px;margin-left:auto;margin-right:auto;text-align:left}
+    li{display:flex;align-items:start;margin:16px 0;color:#d1d5db;line-height:1.75;font-size:16px}
+    li:before{content:"•";color:#ff7a18;margin-right:16px;font-size:24px;line-height:1;font-weight:bold}
+    .footer-note{padding:48px 0;border-top:1px solid rgba(255,255,255,0.12);text-align:center;margin-top:64px}
+    .footer-note p{font-size:14px;color:rgba(255,255,255,0.6);margin:0;max-width:640px;margin-left:auto;margin-right:auto}
+    .small{font-size:12px;color:rgba(255,255,255,0.4);text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08)}
+    a{color:#ffb26b;text-decoration:none}
+    a:hover{color:#ff7a18;text-decoration:none}
+    .content-center{max-width:768px;margin:0 auto;text-align:left}
     @media (max-width:640px){
       .hero h1{font-size:36px}
       .hero p{font-size:18px}
       .section,.section-alt{padding:48px 0}
-      .btn-group{flex-direction:column}
-      .btn{width:100%;text-align:center}
+      .btn-group{flex-direction:column;width:100%}
+      .btn{width:100%;max-width:100%}
+      h1{font-size:32px}
+      h2{font-size:28px}
+      .card-grid{grid-template-columns:1fr}
     }
   </style>
   </head><body><div class="wrap">${body}<div class="small">Iron Front Digital • v${VERSION}</div></div></body></html>`;
@@ -392,8 +397,8 @@ const server = http.createServer((req, res) => {
     </div>
     
     <div class="section-alt">
-      <h2 style="text-align:center;">What This Platform Is</h2>
-      <div style="max-width:768px;margin:0 auto;">
+      <h2>What This Platform Is</h2>
+      <div class="content-center">
         <p>Operational software and infrastructure designed to support long-term business operations.</p>
         <p>Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.</p>
         <p>Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.</p>
@@ -401,7 +406,7 @@ const server = http.createServer((req, res) => {
     </div>
     
     <div class="section">
-      <h2 style="text-align:center;">Who This Is For</h2>
+      <h2>Who This Is For</h2>
       <div class="card-grid">
         <div class="card">
           <h3>Existing Business Operators</h3>
@@ -419,19 +424,17 @@ const server = http.createServer((req, res) => {
     </div>
     
     <div class="section-alt">
-      <h2 style="text-align:center;">What This Is Not</h2>
-      <div style="max-width:768px;margin:0 auto;">
-        <ul>
-          <li>Not an MLM</li>
-          <li>Not a business opportunity</li>
-          <li>No income guarantees</li>
-          <li>No recruiting promises</li>
-        </ul>
-      </div>
+      <h2>What This Is Not</h2>
+      <ul>
+        <li>Not an MLM</li>
+        <li>Not a business opportunity</li>
+        <li>No income guarantees</li>
+        <li>No recruiting promises</li>
+      </ul>
     </div>
     
     <div class="section">
-      <h2 style="text-align:center;">How It Works</h2>
+      <h2>How It Works</h2>
       <div class="card-grid">
         <div class="card card-center">
           <div class="step-number">1</div>
@@ -452,12 +455,10 @@ const server = http.createServer((req, res) => {
     </div>
     
     <div class="section-alt">
-      <div style="text-align:center;max-width:768px;margin:0 auto;">
-        <h2>Built for People Who Intend to Operate, Not Experiment</h2>
-        <div class="btn-group">
-          <a href="/pricing" class="btn btn-primary">View Pricing</a>
-          <a href="/apply" class="btn btn-secondary">Apply for Access</a>
-        </div>
+      <h2>Built for People Who Intend to Operate, Not Experiment</h2>
+      <div class="btn-group">
+        <a href="/pricing" class="btn btn-primary">View Pricing</a>
+        <a href="/apply" class="btn btn-secondary">Apply for Access</a>
       </div>
     </div>
     
