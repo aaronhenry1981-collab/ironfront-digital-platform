@@ -336,13 +336,15 @@ const server = http.createServer((req, res) => {
         event("lead_created", id, { email, source, tier: c.tier, ...flagsForTier(c.tier) });
 
         return html(res, 200, page("Application Received", `
-          <h1>Application Received</h1>
-          <div class="card">
-            <p><strong>Recommended Path:</strong> ${c.tier}</p>
-            <p><strong>Pricing Model:</strong> ${c.pricing}</p>
-            <p>${c.note}</p>
+          <div class="hero">
+            <h1>Application Received</h1>
+            <div class="card" style="max-width:640px;margin:32px auto;">
+              <p><strong>Recommended Path:</strong> ${c.tier}</p>
+              <p><strong>Pricing Model:</strong> ${c.pricing}</p>
+              <p>${c.note}</p>
+            </div>
+            <p>Our team will review and follow up.</p>
           </div>
-          <p>Our team will review and follow up.</p>
         `));
       } catch (e) {
         console.error("[ifd] apply error:", e?.message || e);
@@ -364,16 +366,18 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/mlm" || url.pathname === "/biab") {
     const source = url.pathname.replace("/", "");
     return html(res, 200, page("Apply", `
-      <h1>${source === "mlm" ? "Scale Your Existing Business" : "Start a Business"}</h1>
-      <p>${source === "mlm"
-        ? "Infrastructure, automation, and systems for established network marketing organizations."
-        : "Structured guidance and systems to build a real business with an upgrade path."
-      }</p>
-      <form method="POST" action="/apply">
-        <input type="hidden" name="source" value="${source}" />
-        <input required type="email" name="email" placeholder="Your email" />
-        <button>Apply</button>
-      </form>
+      <div class="hero">
+        <h1>${source === "mlm" ? "Scale Your Existing Business" : "Start a Business"}</h1>
+        <p style="max-width:640px;margin:0 auto 32px;">${source === "mlm"
+          ? "Infrastructure, automation, and systems for established network marketing organizations."
+          : "Structured guidance and systems to build a real business with an upgrade path."
+        }</p>
+        <form method="POST" action="/apply" style="max-width:440px;margin:0 auto;">
+          <input type="hidden" name="source" value="${source}" />
+          <input required type="email" name="email" placeholder="Your email" style="margin-bottom:16px;" />
+          <button type="submit" style="width:100%;">Apply</button>
+        </form>
+      </div>
     `));
   }
 
