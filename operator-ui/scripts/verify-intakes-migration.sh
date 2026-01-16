@@ -98,3 +98,4 @@ echo ""
 echo "The 'intakes' table is ready for B4."
 echo ""
 
+

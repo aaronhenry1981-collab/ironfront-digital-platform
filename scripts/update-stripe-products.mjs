@@ -175,12 +175,15 @@ async function createOrUpdateProducts() {
         console.log(`  ✅ Updated existing product: ${stripeProduct.id}`);
       } else {
         // Create new product
-        stripeProduct = await stripe.products.create({
+        // Note: tax_code is optional - only set if Stripe Tax is enabled
+        // Common SaaS tax codes: txcd_10100000 (Software), but may vary by region
+        const productData = {
           name: product.name,
           description: product.customerDescription || product.description,
           metadata: product.metadata,
-          tax_code: 'txcd_10100000', // SaaS tax code
-        });
+        };
+        // Only add tax_code if Stripe Tax is configured (can be set later in dashboard)
+        stripeProduct = await stripe.products.create(productData);
         console.log(`  ✅ Created new product: ${stripeProduct.id}`);
       }
 

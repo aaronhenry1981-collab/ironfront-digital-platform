@@ -121,3 +121,4 @@ aws ssm send-command \
 - Check database permissions
 - Verify events table exists
 
+

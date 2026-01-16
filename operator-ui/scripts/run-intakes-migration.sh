@@ -65,3 +65,4 @@ echo "1. Verify migration: ./scripts/verify-intakes-migration.sh"
 echo "2. Optionally seed: npm run db:seed"
 echo ""
 
+

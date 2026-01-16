@@ -35,3 +35,4 @@ NEXT_PUBLIC_APP_URL=https://ironfrontdigital.com
 - `STRIPE_SECRET_KEY` is server-side only (used in API routes)
 - Price IDs are from the Stripe products created in Step 2
 
+

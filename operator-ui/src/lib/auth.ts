@@ -31,3 +31,4 @@ export function hasOperatorAccess(user: User | null): boolean {
   return user?.role === 'operator' || user?.role === 'owner'
 }
 
+

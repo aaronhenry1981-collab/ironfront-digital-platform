@@ -101,3 +101,4 @@ export async function fetchRecommendations(
   return response.json()
 }
 
+
