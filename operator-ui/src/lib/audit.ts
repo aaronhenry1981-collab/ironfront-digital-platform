@@ -49,4 +49,9 @@ export const AuditEventTypes = {
   INTERVENTION_REVERSED: 'intervention_reversed',
   SEGMENT_VIEWED: 'segment_viewed',
   PARTICIPANT_DETAIL_VIEWED: 'participant_detail_viewed',
+  // Auth event types
+  AUTH_REQUEST: 'auth_request',
+  AUTH_VERIFY: 'auth_verify',
+  AUTH_LOGIN: 'auth_login',
+  AUTH_DENIED: 'auth_denied',
 } as const

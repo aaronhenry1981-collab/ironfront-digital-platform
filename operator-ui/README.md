@@ -4,7 +4,9 @@ Enterprise-grade business operations console for Iron Front Digital.
 
 ## Features
 
+- Owner-only magic-link authentication (no third-party services)
 - Protected routes under `/console/*`
+- Owner console dashboard (`/console/owner`)
 - Organization Live View with real-time engagement visualization
 - Segments management
 - Interventions tracking
@@ -98,6 +100,38 @@ npm run db:generate
 ```bash
 npm run dev
 ```
+
+## Owner Authentication
+
+The owner console uses magic-link authentication with no third-party services.
+
+### How to Log In
+
+1. Navigate to `/login`
+2. Enter the owner email: `aaronhenry1981@gmail.com`
+3. Click "Send Magic Link"
+4. Check the console output (in development) or your email (in production) for the magic link
+5. Click the link to log in
+6. You'll be redirected to `/console/owner`
+
+### Owner Console
+
+The owner console (`/console/owner`) provides:
+- **System Status**: Application, database, and Stripe health checks
+- **Intake Snapshot**: Counts of intakes by status
+- **Recent Activity**: Latest audit events
+- **Revenue Signals**: Checkout event counts
+
+### Logout
+
+Click the "Logout" button in the owner console to end your session.
+
+### Security
+
+- Only the hard-coded owner email can request or verify magic links
+- Magic links expire after 15 minutes
+- Sessions expire after 7 days
+- All authentication attempts are logged to audit events
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 

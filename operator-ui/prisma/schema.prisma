@@ -31,6 +31,7 @@ model Org {
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique @db.Citext
+  role      String?  @db.Text // 'owner', 'operator', 'participant' - owner is immutable
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
   memberships      OrgMembership[]
@@ -38,8 +39,35 @@ model User {
   reverser_interventions Intervention[] @relation("ReverserInterventions")
   actor_events     Event[] @relation("ActorEvents")
   assigned_intakes Intake[]
+  sessions         Session[]
 
   @@map("users")
+}
+
+model MagicLink {
+  id         String    @id @default(uuid()) @db.Uuid
+  email      String    @db.Citext
+  token_hash String    @db.Text
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([email, expires_at])
+  @@index([token_hash])
+  @@map("magic_links")
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  expires_at DateTime  @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, expires_at])
+  @@index([expires_at])
+  @@map("sessions")
 }
 
 model OrgMembership {
