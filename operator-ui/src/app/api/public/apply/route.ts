@@ -16,7 +16,10 @@ const INTAKE_ORG_ID = '00000000-0000-0000-0000-000000000002' // Iron Front Intak
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, intent, tier, message, preferences, paid } = body
+    const { name, email, intent, tier, message, preferences, paid, referral_code } = body
+    
+    // Extract source from query params or body (defaults to 'self_identified')
+    const source = request.nextUrl.searchParams.get('source') || body.source || 'self_identified'
 
     // Validate email
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -49,11 +52,20 @@ export async function POST(request: NextRequest) {
     // Route intake to operator pool
     const routing = await routeIntake(INTAKE_ORG_ID, intent as 'scale' | 'launch' | 'ecosystems')
 
+    // Handle referral code if provided
+    let referrer_id = null
+    if (referral_code) {
+      // Look up referral code to find referrer (future: add referral table)
+      // For now, store in preferences
+    }
+
     // Build preferences object
     const preferencesData: Record<string, any> = {
       ...(preferences || {}),
       paid: paid || false,
       tier: tier || null,
+      source: source,
+      referral_code: referral_code || null,
     }
     if (message) {
       preferencesData.message = message
@@ -96,6 +108,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         intent,
         tier: tier || null,
+        source: source,
+        referral_code: referral_code || null,
         assigned_user_id: routing.assigned_user_id,
         routing_reason: routing.reason,
       },

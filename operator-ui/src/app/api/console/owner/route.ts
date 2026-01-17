@@ -68,26 +68,75 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Revenue Signals
-    const checkoutStarted = await db.event.count({
-      where: {
-        org_id: INTAKE_ORG_ID,
-        event_type: 'checkout_started',
-      },
-    })
+  // Revenue Signals - Get counts and amounts
+  const checkoutStartedCount = await db.event.count({
+    where: {
+      org_id: INTAKE_ORG_ID,
+      event_type: 'checkout_started',
+    },
+  })
 
-    const checkoutCompleted = await db.event.count({
-      where: {
-        org_id: INTAKE_ORG_ID,
-        event_type: 'checkout_completed',
-      },
-    })
+  const checkoutCompletedEvents = await db.event.findMany({
+    where: {
+      org_id: INTAKE_ORG_ID,
+      event_type: 'checkout_completed',
+    },
+    select: {
+      metadata: true,
+    },
+  })
 
-    const revenueSignals = {
-      checkout_started: checkoutStarted,
-      checkout_completed: checkoutCompleted,
-      wired: checkoutStarted > 0 || checkoutCompleted > 0,
-    }
+  // Calculate total revenue from completed checkouts
+  let totalRevenue = 0
+  checkoutCompletedEvents.forEach((event: any) => {
+    const amount = event.metadata?.amount_dollars || event.metadata?.amount / 100 || 0
+    totalRevenue += amount
+  })
+
+  const revenueSignals = {
+    checkout_started: checkoutStartedCount,
+    checkout_completed: checkoutCompletedEvents.length,
+    total_revenue: totalRevenue,
+    wired: checkoutStartedCount > 0 || checkoutCompletedEvents.length > 0,
+  }
+
+  // Source Analytics - Extract from intake preferences or event metadata
+  const allIntakes = await db.intake.findMany({
+    select: {
+      preferences: true,
+      status: true,
+    },
+  })
+
+  const sourceCounts: Record<string, number> = {}
+  allIntakes.forEach((intake: any) => {
+    const source = intake.preferences?.source || 'self_identified'
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1
+  })
+
+  // Also check events for source tracking
+  const intakeEvents = await db.event.findMany({
+    where: {
+      org_id: INTAKE_ORG_ID,
+      event_type: 'intake_created',
+    },
+    select: {
+      metadata: true,
+    },
+  })
+
+  intakeEvents.forEach((event: any) => {
+    const source = event.metadata?.source || 'self_identified'
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1
+  })
+
+  const sourceAnalytics = {
+    self_identified: sourceCounts['self_identified'] || 0,
+    referral: sourceCounts['referral'] || 0,
+    paid_traffic: sourceCounts['paid_traffic'] || 0,
+    pricing_page: sourceCounts['pricing_page'] || 0,
+    total: Object.values(sourceCounts).reduce((sum, count) => sum + count, 0),
+  }
 
     return NextResponse.json({
       system_status: {
@@ -98,6 +147,7 @@ export async function GET(request: NextRequest) {
       intake_snapshot: intakeSnapshot,
       recent_activity: recentEvents,
       revenue_signals: revenueSignals,
+      source_analytics: sourceAnalytics,
     })
   } catch (error: any) {
     console.error('Owner console API error:', error)

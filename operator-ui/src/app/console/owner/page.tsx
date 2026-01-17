@@ -45,6 +45,44 @@ async function getOwnerData() {
     intakeSnapshot.total += item._count
   })
 
+  // Source Analytics - Extract from intake preferences.metadata or event metadata
+  const allIntakes = await db.intake.findMany({
+    select: {
+      preferences: true,
+      status: true,
+    },
+  })
+
+  const sourceCounts: Record<string, number> = {}
+  allIntakes.forEach((intake: any) => {
+    const source = intake.preferences?.source || 'self_identified'
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1
+  })
+
+  // Also check events for source tracking
+  const intakeEvents = await db.event.findMany({
+    where: {
+      org_id: INTAKE_ORG_ID,
+      event_type: 'intake_created',
+    },
+    select: {
+      metadata: true,
+    },
+  })
+
+  intakeEvents.forEach((event: any) => {
+    const source = event.metadata?.source || 'self_identified'
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1
+  })
+
+  const sourceAnalytics = {
+    self_identified: sourceCounts['self_identified'] || 0,
+    referral: sourceCounts['referral'] || 0,
+    paid_traffic: sourceCounts['paid_traffic'] || 0,
+    pricing_page: sourceCounts['pricing_page'] || 0,
+    total: Object.values(sourceCounts).reduce((sum, count) => sum + count, 0),
+  }
+
   // Recent Activity
   const recentEvents = await db.event.findMany({
     where: {
@@ -63,25 +101,36 @@ async function getOwnerData() {
     },
   })
 
-  // Revenue Signals
-  const checkoutStarted = await db.event.count({
+  // Revenue Signals - Get counts and amounts
+  const checkoutStartedCount = await db.event.count({
     where: {
       org_id: INTAKE_ORG_ID,
       event_type: 'checkout_started',
     },
   })
 
-  const checkoutCompleted = await db.event.count({
+  const checkoutCompletedEvents = await db.event.findMany({
     where: {
       org_id: INTAKE_ORG_ID,
       event_type: 'checkout_completed',
     },
+    select: {
+      metadata: true,
+    },
+  })
+
+  // Calculate total revenue from completed checkouts
+  let totalRevenue = 0
+  checkoutCompletedEvents.forEach((event: any) => {
+    const amount = event.metadata?.amount_dollars || event.metadata?.amount / 100 || 0
+    totalRevenue += amount
   })
 
   const revenueSignals = {
-    checkout_started: checkoutStarted,
-    checkout_completed: checkoutCompleted,
-    wired: checkoutStarted > 0 || checkoutCompleted > 0,
+    checkout_started: checkoutStartedCount,
+    checkout_completed: checkoutCompletedEvents.length,
+    total_revenue: totalRevenue,
+    wired: checkoutStartedCount > 0 || checkoutCompletedEvents.length > 0,
   }
 
   return {
@@ -93,6 +142,7 @@ async function getOwnerData() {
     intake_snapshot: intakeSnapshot,
     recent_activity: recentEvents,
     revenue_signals: revenueSignals,
+    source_analytics: sourceAnalytics,
   }
 }
 
@@ -230,28 +280,60 @@ export default async function OwnerConsolePage() {
         </div>
 
         {/* Revenue Signals */}
-        <div>
+        <div className="mb-8">
           <h2 className="text-xl font-medium text-gray-900 mb-4">Revenue Signals</h2>
           <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <div className="text-2xl font-medium text-gray-900">{data.revenue_signals.checkout_started}</div>
-                <div className="text-sm text-gray-600">Checkout Started</div>
+                <div className="text-sm text-gray-600">Checkouts Started</div>
               </div>
               <div>
                 <div className="text-2xl font-medium text-gray-900">{data.revenue_signals.checkout_completed}</div>
-                <div className="text-sm text-gray-600">Checkout Completed</div>
+                <div className="text-sm text-gray-600">Checkouts Completed</div>
+              </div>
+              <div>
+                <div className="text-2xl font-medium text-green-600">
+                  ${data.revenue_signals.total_revenue.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600">Total Revenue</div>
               </div>
               <div>
                 <div className="text-2xl font-medium text-gray-900">
                   {data.revenue_signals.wired ? '✓' : '—'}
                 </div>
-                <div className="text-sm text-gray-600">Wired</div>
+                <div className="text-sm text-gray-600">Tracking Active</div>
               </div>
             </div>
-            {!data.revenue_signals.wired && (
-              <p className="text-xs text-gray-500 mt-4">TODO: Wire checkout events</p>
-            )}
+          </div>
+        </div>
+
+        {/* Source Analytics */}
+        <div>
+          <h2 className="text-xl font-medium text-gray-900 mb-4">Lead Source Analytics</h2>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-2xl font-medium text-gray-900">{data.source_analytics.self_identified}</div>
+                <div className="text-sm text-gray-600">Self-Identified</div>
+              </div>
+              <div>
+                <div className="text-2xl font-medium text-gray-900">{data.source_analytics.referral}</div>
+                <div className="text-sm text-gray-600">Referral</div>
+              </div>
+              <div>
+                <div className="text-2xl font-medium text-gray-900">{data.source_analytics.paid_traffic}</div>
+                <div className="text-sm text-gray-600">Paid Traffic</div>
+              </div>
+              <div>
+                <div className="text-2xl font-medium text-gray-900">{data.source_analytics.pricing_page}</div>
+                <div className="text-sm text-gray-600">Pricing Page</div>
+              </div>
+              <div>
+                <div className="text-2xl font-medium text-gray-900">{data.source_analytics.total}</div>
+                <div className="text-sm text-gray-600">Total Leads</div>
+              </div>
+            </div>
           </div>
         </div>
 
