@@ -503,7 +503,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/health") return json(res, 200, { ok: true, version: VERSION });
+  // Health check with database status
+  if (url.pathname === "/health") {
+    const health = {
+      ok: true,
+      version: VERSION,
+      database: {
+        sqlite: "ok", // SQLite always works (for leads/events)
+        postgres: pgPool ? "configured" : "not_configured",
+        auth_enabled: !!pgPool,
+      },
+    };
+    // If DATABASE_URL is set but pgPool is null, check why
+    if (process.env.DATABASE_URL && !pgPool) {
+      health.database.postgres = "misconfigured";
+      health.database.postgres_note = "DATABASE_URL set but not PostgreSQL format";
+    }
+    return json(res, 200, health);
+  }
   
   if (url.pathname === "/ready") {
     // /ready checks database connection (for deployment gates)
