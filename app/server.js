@@ -34,8 +34,27 @@ const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 
 // PostgreSQL connection for auth tables (shared with Next.js operator-ui)
-const pgPool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+let pgPool = null;
 const OWNER_EMAIL = "aaronhenry1981@gmail.com";
+
+if (process.env.DATABASE_URL) {
+  try {
+    // Only create pool if DATABASE_URL is PostgreSQL (not MySQL)
+    if (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://')) {
+      pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+      // Test connection (non-blocking)
+      pgPool.query('SELECT 1').catch((err) => {
+        console.error('[ifd] PostgreSQL connection failed:', err.message);
+      });
+    } else {
+      console.warn('[ifd] DATABASE_URL is not PostgreSQL (must be postgres:// or postgresql://). Auth will not work.');
+    }
+  } catch (err) {
+    console.error('[ifd] Failed to initialize PostgreSQL pool:', err.message);
+  }
+} else {
+  console.warn('[ifd] DATABASE_URL not set. Auth API routes will not work.');
+}
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS leads (
@@ -321,8 +340,11 @@ const server = http.createServer((req, res) => {
   // Auth API routes - POST /api/auth/request-link
   if (url.pathname === "/api/auth/request-link" && req.method === "POST") {
     if (!pgPool) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify({ error: "Database not configured" }));
+      console.error('[ifd] Auth API called but PostgreSQL not configured. DATABASE_URL:', process.env.DATABASE_URL ? 'set (check format)' : 'not set');
+      res.writeHead(503, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ 
+        error: "Authentication service unavailable. Database connection not configured. Please set DATABASE_URL to a PostgreSQL connection string."
+      }));
     }
 
     let body = "";
