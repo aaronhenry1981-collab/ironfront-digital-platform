@@ -420,60 +420,64 @@ const server = http.createServer((req, res) => {
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    try {
-      // Find valid magic link
-      const linkResult = await pgPool.query(
-        `SELECT ml.*, u.id as user_id, u.role as user_role 
-         FROM magic_links ml 
-         LEFT JOIN users u ON u.email = ml.email 
-         WHERE ml.token_hash = $1 AND ml.used_at IS NULL AND ml.expires_at > NOW()`,
-        [tokenHash]
-      );
+    (async () => {
+      try {
+        // Find valid magic link
+        const linkResult = await pgPool.query(
+          `SELECT ml.*, u.id as user_id, u.role as user_role 
+           FROM magic_links ml 
+           LEFT JOIN users u ON u.email = ml.email 
+           WHERE ml.token_hash = $1 AND ml.used_at IS NULL AND ml.expires_at > NOW()`,
+          [tokenHash]
+        );
 
-      if (linkResult.rows.length === 0 || linkResult.rows[0].email !== OWNER_EMAIL || linkResult.rows[0].user_role !== "owner") {
-        return res.writeHead(302, { Location: "/login?error=invalid_or_expired_link" }).end();
+        if (linkResult.rows.length === 0 || linkResult.rows[0].email !== OWNER_EMAIL || linkResult.rows[0].user_role !== "owner") {
+          res.writeHead(302, { Location: "/login?error=invalid_or_expired_link" });
+          return res.end();
+        }
+
+        const magicLink = linkResult.rows[0];
+
+        // Mark magic link as used
+        await pgPool.query("UPDATE magic_links SET used_at = NOW() WHERE id = $1", [magicLink.id]);
+
+        // Create session (7 day expiry)
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const sessionResult = await pgPool.query(
+          "INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (gen_random_uuid(), $1, $2, NOW()) RETURNING id",
+          [magicLink.user_id, expiresAt.toISOString()]
+        );
+        const sessionId = sessionResult.rows[0].id;
+
+        // Log auth verify (non-blocking) - use events table if it exists
+        pgPool.query(
+          "INSERT INTO events (id, org_id, actor_user_id, actor_role, event_type, target_type, metadata, created_at) VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, $5, $6::jsonb, NOW())",
+          ["00000000-0000-0000-0000-000000000002", magicLink.user_id, "owner", "auth_verify", "magic_link", JSON.stringify({ email: magicLink.email, sessionId })]
+        ).catch(() => {});
+
+        // Set session cookie and redirect to console
+        const cookieOptions = [
+          `ifd_session=${sessionId}`,
+          "HttpOnly",
+          "SameSite=Lax",
+          `Path=/`,
+          `Expires=${expiresAt.toUTCString()}`,
+        ];
+        if (process.env.NODE_ENV === "production") {
+          cookieOptions.push("Secure");
+        }
+
+        res.writeHead(302, {
+          "Set-Cookie": cookieOptions.join("; "),
+          "Location": "/console/owner",
+        });
+        res.end();
+      } catch (error) {
+        console.error("Error in verify-link:", error);
+        res.writeHead(302, { Location: "/login?error=verification_failed" });
+        res.end();
       }
-
-      const magicLink = linkResult.rows[0];
-
-      // Mark magic link as used
-      await pgPool.query("UPDATE magic_links SET used_at = NOW() WHERE id = $1", [magicLink.id]);
-
-      // Create session (7 day expiry)
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      const sessionResult = await pgPool.query(
-        "INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (gen_random_uuid(), $1, $2, NOW()) RETURNING id",
-        [magicLink.user_id, expiresAt.toISOString()]
-      );
-      const sessionId = sessionResult.rows[0].id;
-
-      // Log auth verify (non-blocking) - use events table if it exists
-      pgPool.query(
-        "INSERT INTO events (id, org_id, actor_user_id, actor_role, event_type, target_type, metadata, created_at) VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, $5, $6::jsonb, NOW())",
-        ["00000000-0000-0000-0000-000000000002", magicLink.user_id, "owner", "auth_verify", "magic_link", JSON.stringify({ email: magicLink.email, sessionId })]
-      ).catch(() => {});
-
-      // Set session cookie and redirect to console
-      const cookieOptions = [
-        `ifd_session=${sessionId}`,
-        "HttpOnly",
-        "SameSite=Lax",
-        `Path=/`,
-        `Expires=${expiresAt.toUTCString()}`,
-      ];
-      if (process.env.NODE_ENV === "production") {
-        cookieOptions.push("Secure");
-      }
-
-      res.writeHead(302, {
-        "Set-Cookie": cookieOptions.join("; "),
-        "Location": "/console/owner",
-      });
-      res.end();
-    } catch (error) {
-      console.error("Error in verify-link:", error);
-      res.writeHead(302, { Location: "/login?error=verification_failed" }).end();
-    }
+    })();
     return;
   }
 
