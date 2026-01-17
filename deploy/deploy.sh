@@ -34,10 +34,29 @@ if [[ -n "${OLD_CONTAINER_ID}" ]]; then
   OLD_IMAGE_ID="$(docker inspect --format='{{.Image}}' "${OLD_CONTAINER_ID}" || true)"
 fi
 
+# Ensure .env file exists (with placeholders if needed)
+if [[ ! -f "${APP_DIR}/.env" ]]; then
+  echo "[deploy] .env file not found, initializing..."
+  mkdir -p "${APP_DIR}"
+  touch "${APP_DIR}/.env"
+  chmod 600 "${APP_DIR}/.env"
+  echo "# Iron Front Digital - Environment Variables" >> "${APP_DIR}/.env"
+  echo "# Required: DATABASE_URL (PostgreSQL connection string)" >> "${APP_DIR}/.env"
+  echo "# Format: postgresql://username:password@host:5432/database_name" >> "${APP_DIR}/.env"
+  echo "# DATABASE_URL=postgresql://user:password@host:5432/dbname" >> "${APP_DIR}/.env"
+  echo "[deploy] WARNING: .env file created with placeholder. Please set DATABASE_URL for authentication to work."
+fi
+
 # Prepare env file args
 ENVFILE_ARGS=()
 if [[ -f "${APP_DIR}/.env" ]]; then
   ENVFILE_ARGS+=(--env-file "${APP_DIR}/.env")
+  
+  # Warn if DATABASE_URL is not set or is a placeholder
+  if grep -q "^# DATABASE_URL=" "${APP_DIR}/.env" || ! grep -q "^DATABASE_URL=postgres" "${APP_DIR}/.env"; then
+    echo "[deploy] WARNING: DATABASE_URL may not be configured. Authentication will not work."
+    echo "[deploy] Set DATABASE_URL in ${APP_DIR}/.env or use GitHub Actions workflow 'Set DATABASE_URL in Production'"
+  fi
 fi
 
 # Helper function to log deploy events (non-blocking)
