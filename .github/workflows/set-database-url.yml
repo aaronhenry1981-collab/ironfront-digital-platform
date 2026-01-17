@@ -1,0 +1,179 @@
+name: Set DATABASE_URL in Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'PostgreSQL DATABASE_URL (postgresql://user:password@host:5432/dbname)'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  set-database-url:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Validate DATABASE_URL format
+        run: |
+          if [[ ! "${{ github.event.inputs.database_url }}" =~ ^postgresql:// ]] && [[ ! "${{ github.event.inputs.database_url }}" =~ ^postgres:// ]]; then
+            echo "❌ Error: DATABASE_URL must start with 'postgresql://' or 'postgres://'"
+            exit 1
+          fi
+          echo "✅ DATABASE_URL format is valid"
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
+          aws-region: us-east-2
+
+      - name: Set DATABASE_URL via SSM
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ github.event.inputs.database_url }}
+        run: |
+          set -euo pipefail
+          
+          # Escape the DATABASE_URL for shell (especially special characters in password)
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"ENV_FILE=/opt/ifd-app/.env\",
+              \"mkdir -p /opt/ifd-app || true\",
+              \"if [ -f \\\$ENV_FILE ] && grep -q '^DATABASE_URL=' \\\$ENV_FILE; then\",
+              \"  sed -i 's|^DATABASE_URL=.*|DATABASE_URL='$ESCAPED_DB_URL'|' \\\$ENV_FILE\",
+              \"  echo 'Updated existing DATABASE_URL in .env file'\",
+              \"else\",
+              \"  echo 'DATABASE_URL='$ESCAPED_DB_URL >> \\\$ENV_FILE\",
+              \"  echo 'Added DATABASE_URL to .env file'\",
+              \"fi\",
+              \"chmod 600 \\\$ENV_FILE\",
+              \"echo 'DATABASE_URL configured successfully'\",
+              \"echo ''\",
+              \"echo 'Verifying .env file:'\",
+              \"grep '^DATABASE_URL=' \\\$ENV_FILE | sed 's/:[^:@]*@/:****@/g'\"
+            ]" \
+            --comment "IFD set DATABASE_URL" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Waiting for command to complete..."
+          sleep 5
+          
+          # Wait for command to complete
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          # Get command output
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          STATUS=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+          
+          echo "Command Status: $STATUS"
+          echo ""
+          echo "Output:"
+          echo "$OUTPUT"
+          
+          if [[ "$STATUS" != "Success" ]]; then
+            ERROR=$(aws ssm get-command-invocation \
+              --region us-east-2 \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text)
+            echo ""
+            echo "Error:"
+            echo "$ERROR"
+            exit 1
+          fi
+
+      - name: Restart Docker container
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"docker restart ifd-app || echo 'Container ifd-app not found or already stopped'\",
+              \"sleep 5\",
+              \"curl -fsS http://localhost:3000/health || echo 'Health check failed'\"
+            ]" \
+            --comment "IFD restart container after DATABASE_URL config" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Waiting for container restart..."
+          sleep 10
+          
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "Restart output:"
+          echo "$OUTPUT"
+
+      - name: Verify configuration
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          echo "Checking health endpoint..."
+          sleep 3
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"curl -fsS http://localhost:3000/health | jq . || curl -fsS http://localhost:3000/health\"
+            ]" \
+            --comment "IFD verify DATABASE_URL config" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "Health check response:"
+          echo "$OUTPUT"
+
