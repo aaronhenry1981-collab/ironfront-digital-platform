@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "stripe": "14.21.0",
-    "better-sqlite3": "9.6.0"
+    "better-sqlite3": "9.6.0",
+    "pg": "^8.11.3"
   }
 }

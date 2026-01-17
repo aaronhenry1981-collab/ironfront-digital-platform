@@ -3,6 +3,8 @@ import crypto from "crypto";
 import fs from "fs";
 import Stripe from "stripe";
 import Database from "better-sqlite3";
+import pg from "pg";
+const { Pool } = pg;
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const VERSION = process.env.APP_VERSION || "missing";
@@ -30,6 +32,10 @@ ensureDir(DB_PATH);
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
+
+// PostgreSQL connection for auth tables (shared with Next.js operator-ui)
+const pgPool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+const OWNER_EMAIL = "aaronhenry1981@gmail.com";
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS leads (
@@ -312,19 +318,162 @@ const server = http.createServer((req, res) => {
     `));
   }
 
-  // Auth API routes - proxy to Next.js app or return error if not available
+  // Auth API routes - POST /api/auth/request-link
   if (url.pathname === "/api/auth/request-link" && req.method === "POST") {
-    // This should proxy to Next.js operator-ui app's /api/auth/request-link
-    // For now, return a message that this needs to be proxied
-    res.writeHead(501, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Auth API must be proxied to Next.js operator-ui app" }));
+    if (!pgPool) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: "Database not configured" }));
+    }
+
+    let body = "";
+    req.on("data", (chunk) => { body += chunk.toString(); });
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+        const email = (data.email || "").toLowerCase().trim();
+
+        if (!email) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ error: "Email is required" }));
+        }
+
+        // Hard requirement: Only owner email can request a link
+        if (email !== OWNER_EMAIL) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ error: "Access restricted." }));
+        }
+
+        // Get or create owner user
+        let userResult = await pgPool.query(
+          "SELECT id, email, role FROM users WHERE email = $1",
+          [email]
+        );
+        let userId;
+        if (userResult.rows.length === 0) {
+          const newUser = await pgPool.query(
+            "INSERT INTO users (id, email, role, created_at) VALUES (gen_random_uuid(), $1, $2, NOW()) RETURNING id",
+            [email, "owner"]
+          );
+          userId = newUser.rows[0].id;
+        } else {
+          userId = userResult.rows[0].id;
+          if (userResult.rows[0].role !== "owner") {
+            await pgPool.query("UPDATE users SET role = $1 WHERE id = $2", ["owner", userId]);
+          }
+        }
+
+        // Invalidate previous unused links
+        await pgPool.query(
+          "UPDATE magic_links SET used_at = NOW() WHERE email = $1 AND used_at IS NULL AND expires_at > NOW()",
+          [email]
+        );
+
+        // Generate token and hash
+        const token = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+        // Create magic link (15 minute expiry)
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        await pgPool.query(
+          "INSERT INTO magic_links (id, email, token_hash, expires_at, created_at) VALUES (gen_random_uuid(), $1, $2, $3, NOW())",
+          [email, tokenHash, expiresAt.toISOString()]
+        );
+
+        // Log auth request (non-blocking) - use events table if it exists
+        pgPool.query(
+          "INSERT INTO events (id, org_id, actor_user_id, actor_role, event_type, target_type, metadata, created_at) VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, $5, $6::jsonb, NOW())",
+          ["00000000-0000-0000-0000-000000000002", userId, "owner", "auth_request", "magic_link", JSON.stringify({ email })]
+        ).catch(() => {});
+
+        // For now, log magic link to console (TODO: send email)
+        const verifyUrl = `${req.headers.host ? `https://${req.headers.host}` : "http://localhost:3000"}/api/auth/verify-link?token=${token}`;
+        console.log("=".repeat(80));
+        console.log("MAGIC LINK EMAIL (v1 - console only)");
+        console.log("=".repeat(80));
+        console.log(`To: ${email}`);
+        console.log(`Subject: Your Iron Front Digital Login Link`);
+        console.log(`Click this link to log in: ${verifyUrl}`);
+        console.log(`This link expires in 15 minutes.`);
+        console.log("=".repeat(80));
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, message: "Magic link sent" }));
+      } catch (error) {
+        console.error("Error in request-link:", error);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      }
+    });
     return;
   }
 
-  if (url.pathname === "/api/auth/verify-link") {
-    // This should proxy to Next.js operator-ui app's /api/auth/verify-link
-    res.writeHead(501, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Auth API must be proxied to Next.js operator-ui app" }));
+  // Auth API routes - GET /api/auth/verify-link
+  if (url.pathname === "/api/auth/verify-link" && req.method === "GET") {
+    if (!pgPool) {
+      return res.writeHead(302, { Location: "/login?error=database_not_configured" }).end();
+    }
+
+    const token = url.searchParams.get("token");
+    if (!token) {
+      return res.writeHead(302, { Location: "/login?error=invalid_link" }).end();
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    try {
+      // Find valid magic link
+      const linkResult = await pgPool.query(
+        `SELECT ml.*, u.id as user_id, u.role as user_role 
+         FROM magic_links ml 
+         LEFT JOIN users u ON u.email = ml.email 
+         WHERE ml.token_hash = $1 AND ml.used_at IS NULL AND ml.expires_at > NOW()`,
+        [tokenHash]
+      );
+
+      if (linkResult.rows.length === 0 || linkResult.rows[0].email !== OWNER_EMAIL || linkResult.rows[0].user_role !== "owner") {
+        return res.writeHead(302, { Location: "/login?error=invalid_or_expired_link" }).end();
+      }
+
+      const magicLink = linkResult.rows[0];
+
+      // Mark magic link as used
+      await pgPool.query("UPDATE magic_links SET used_at = NOW() WHERE id = $1", [magicLink.id]);
+
+      // Create session (7 day expiry)
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const sessionResult = await pgPool.query(
+        "INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (gen_random_uuid(), $1, $2, NOW()) RETURNING id",
+        [magicLink.user_id, expiresAt.toISOString()]
+      );
+      const sessionId = sessionResult.rows[0].id;
+
+      // Log auth verify (non-blocking) - use events table if it exists
+      pgPool.query(
+        "INSERT INTO events (id, org_id, actor_user_id, actor_role, event_type, target_type, metadata, created_at) VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, $5, $6::jsonb, NOW())",
+        ["00000000-0000-0000-0000-000000000002", magicLink.user_id, "owner", "auth_verify", "magic_link", JSON.stringify({ email: magicLink.email, sessionId })]
+      ).catch(() => {});
+
+      // Set session cookie and redirect to console
+      const cookieOptions = [
+        `ifd_session=${sessionId}`,
+        "HttpOnly",
+        "SameSite=Lax",
+        `Path=/`,
+        `Expires=${expiresAt.toUTCString()}`,
+      ];
+      if (process.env.NODE_ENV === "production") {
+        cookieOptions.push("Secure");
+      }
+
+      res.writeHead(302, {
+        "Set-Cookie": cookieOptions.join("; "),
+        "Location": "/console/owner",
+      });
+      res.end();
+    } catch (error) {
+      console.error("Error in verify-link:", error);
+      res.writeHead(302, { Location: "/login?error=verification_failed" }).end();
+    }
     return;
   }
 
