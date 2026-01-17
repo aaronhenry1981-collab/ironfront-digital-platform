@@ -228,6 +228,106 @@ function page(title, body) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", "http://localhost");
 
+  // Owner login page - serves login form for magic link authentication
+  if (url.pathname === "/login") {
+    const OWNER_EMAIL = "aaronhenry1981@gmail.com";
+    return html(res, 200, page("Owner Login", `
+      <div style="min-height:calc(100vh - 120px);display:flex;align-items:center;justify-content:center;padding:20px;background:#111827;">
+        <div style="width:100%;max-width:400px;background:#1f2937;border-radius:8px;padding:32px;box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+          ${process.env.NODE_ENV === 'development' ? '<div style="position:fixed;top:0;left:0;right:0;background:#fef3c7;border-bottom:1px solid #f59e0b;color:#92400e;font-size:12px;padding:4px 16px;text-align:center;">Login UI mounted</div>' : ''}
+          <h1 style="font-size:24px;font-weight:600;color:#fff;margin-bottom:24px;text-align:center;">Owner Login</h1>
+          <form id="loginForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label for="email" style="display:block;font-size:14px;font-weight:500;color:#d1d5db;margin-bottom:4px;">Email</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                required 
+                placeholder="Enter owner email"
+                style="width:100%;padding:8px 12px;background:#374151;border:1px solid #4b5563;border-radius:4px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;"
+                onfocus="this.style.borderColor='#ea580c';"
+                onblur="this.style.borderColor='#4b5563';"
+              />
+            </div>
+            <button 
+              type="submit" 
+              id="submitBtn"
+              style="width:100%;padding:10px;background:#ea580c;color:#fff;border:none;border-radius:4px;font-weight:500;font-size:14px;cursor:pointer;transition:background 0.2s;"
+              onmouseover="this.style.background='#c2410c';"
+              onmouseout="this.style.background='#ea580c';"
+            >
+              Send secure login link
+            </button>
+          </form>
+          <div id="statusText" style="margin-top:16px;font-size:14px;text-align:center;min-height:20px;"></div>
+        </div>
+      </div>
+      <script>
+        (function() {
+          const form = document.getElementById('loginForm');
+          const statusText = document.getElementById('statusText');
+          const submitBtn = document.getElementById('submitBtn');
+          const OWNER_EMAIL = "${OWNER_EMAIL}";
+          
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            statusText.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            try {
+              const response = await fetch('/api/auth/request-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+              });
+              
+              const data = await response.json();
+              
+              if (!response.ok) {
+                if (response.status === 403) {
+                  statusText.textContent = 'Access restricted.';
+                  statusText.style.color = '#ef4444';
+                } else {
+                  statusText.textContent = data.error || 'Failed to send login link.';
+                  statusText.style.color = '#ef4444';
+                }
+              } else {
+                statusText.textContent = 'Check your email for a secure login link';
+                statusText.style.color = '#10b981';
+                form.reset();
+              }
+            } catch (error) {
+              statusText.textContent = 'Failed to send login link. Please try again.';
+              statusText.style.color = '#ef4444';
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Send secure login link';
+            }
+          });
+        })();
+      </script>
+    `));
+  }
+
+  // Auth API routes - proxy to Next.js app or return error if not available
+  if (url.pathname === "/api/auth/request-link" && req.method === "POST") {
+    // This should proxy to Next.js operator-ui app's /api/auth/request-link
+    // For now, return a message that this needs to be proxied
+    res.writeHead(501, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Auth API must be proxied to Next.js operator-ui app" }));
+    return;
+  }
+
+  if (url.pathname === "/api/auth/verify-link") {
+    // This should proxy to Next.js operator-ui app's /api/auth/verify-link
+    res.writeHead(501, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Auth API must be proxied to Next.js operator-ui app" }));
+    return;
+  }
+
   if (url.pathname === "/health") return json(res, 200, { ok: true, version: VERSION });
   
   if (url.pathname === "/ready") {
