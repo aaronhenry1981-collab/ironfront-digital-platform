@@ -46,3 +46,7 @@ export default function IntakeCard({ intake, onClick }: IntakeCardProps) {
 }
 
 
+
+
+
+

@@ -122,3 +122,7 @@ aws ssm send-command \
 - Verify events table exists
 
 
+
+
+
+

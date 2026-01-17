@@ -38,3 +38,7 @@ VALUES (gen_random_uuid(), 'aaronhenry1981@gmail.com', 'owner', CURRENT_TIMESTAM
 ON CONFLICT ("email") DO UPDATE SET "role" = 'owner'
 WHERE "users"."email" = 'aaronhenry1981@gmail.com';
 
+
+
+
+

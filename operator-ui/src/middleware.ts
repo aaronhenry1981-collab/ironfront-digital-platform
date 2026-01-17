@@ -5,16 +5,31 @@ import { getCurrentUser, isOwner } from './lib/auth'
 /**
  * Middleware to protect /console/* routes
  * Requires valid session and owner role
+ * 
+ * EXPLICITLY EXCLUDED (no auth checks):
+ * - /login
+ * - /api/auth/request-link
+ * - /api/auth/verify-link
+ * - /api/auth/logout (handles its own auth)
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // Explicitly exclude login and auth routes
+  if (
+    pathname === '/login' ||
+    pathname.startsWith('/api/auth/request-link') ||
+    pathname.startsWith('/api/auth/verify-link')
+  ) {
+    return NextResponse.next()
+  }
 
   // Only protect /console/* routes
   if (!pathname.startsWith('/console')) {
     return NextResponse.next()
   }
 
-  // Allow /api/* routes to handle their own auth
+  // Allow other /api/* routes to handle their own auth
   if (pathname.startsWith('/api')) {
     return NextResponse.next()
   }

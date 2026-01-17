@@ -168,3 +168,7 @@ Common tax codes:
 **Next:** Enable in Stripe Dashboard, then products will automatically use tax calculation
 
 
+
+
+
+
