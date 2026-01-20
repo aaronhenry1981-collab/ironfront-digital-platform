@@ -34,62 +34,57 @@ jobs:
         run: |
           set -euo pipefail
           
-          echo "Getting VPC info from RDS subnet groups (no EC2 permissions needed)..."
+          echo "Getting VPC and security group info via SSM (EC2 instance has permissions)..."
           
-          # Get VPC ID from default RDS subnet group
-          VPC_ID=$(aws rds describe-db-subnet-groups \
-            --db-subnet-group-name default \
-            --query 'DBSubnetGroups[0].VpcId' \
-            --output text \
-            --region us-east-2 2>/dev/null || echo "")
-          
-          # If that doesn't work, try to get it from existing RDS instances
-          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" ]]; then
-            echo "Trying to get VPC from existing RDS instances..."
-            VPC_ID=$(aws rds describe-db-instances \
-              --query 'DBInstances[0].DBSubnetGroup.VpcId' \
-              --output text \
-              --region us-east-2 2>/dev/null || echo "")
-          fi
-          
-          # If still no VPC, get it via SSM from the EC2 instance (which can describe itself)
-          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" ]]; then
-            echo "Getting VPC ID via SSM from EC2 instance..."
-            VPC_ID=$(aws ssm send-command \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters commands="[
-                \"aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text --region us-east-2\"
-              ]" \
-              --region us-east-2 \
-              --query "Command.CommandId" \
-              --output text | xargs -I {} sh -c 'sleep 3 && aws ssm get-command-invocation --command-id {} --instance-id "$INSTANCE_ID" --region us-east-2 --query "StandardOutputContent" --output text | tr -d "\n"')
-          fi
-          
-          # Get instance security group via SSM (instance can describe itself)
-          echo "Getting instance security group via SSM..."
+          # Get both VPC ID and instance security group in one SSM command
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters commands="[
-              \"aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2\"
+              \"set -euo pipefail\",
+              \"VPC_ID=\\\$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text --region us-east-2)\",
+              \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2)\",
+              \"echo 'VPC_ID='\\\$VPC_ID\",
+              \"echo 'INSTANCE_SG='\\\$INSTANCE_SG\"
             ]" \
             --region us-east-2 \
             --query "Command.CommandId" \
             --output text)
           
-          sleep 5
-          INSTANCE_SG=$(aws ssm get-command-invocation \
+          echo "Waiting for SSM command to complete..."
+          sleep 8
+          
+          # Wait for command to complete
+          aws ssm wait command-executed \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 || true
+          
+          # Get output
+          OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$CMD_ID" \
             --instance-id "$INSTANCE_ID" \
             --region us-east-2 \
             --query "StandardOutputContent" \
-            --output text | tr -d '\n\r ')
+            --output text)
           
-          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || -z "$INSTANCE_SG" || "$INSTANCE_SG" == "None" ]]; then
-            echo "❌ Failed to get VPC ID or instance security group"
-            echo "VPC_ID: $VPC_ID"
-            echo "INSTANCE_SG: $INSTANCE_SG"
+          echo "SSM Output:"
+          echo "$OUTPUT"
+          
+          # Parse VPC ID and instance security group from output
+          VPC_ID=$(echo "$OUTPUT" | grep -E "^VPC_ID=" | cut -d'=' -f2 | tr -d '\n\r ' || echo "")
+          INSTANCE_SG=$(echo "$OUTPUT" | grep -E "^INSTANCE_SG=" | cut -d'=' -f2 | tr -d '\n\r ' || echo "")
+          
+          # Validate
+          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || ! "$VPC_ID" =~ ^vpc- ]]; then
+            echo "❌ Failed to get valid VPC ID"
+            echo "VPC_ID: '$VPC_ID'"
+            exit 1
+          fi
+          
+          if [[ -z "$INSTANCE_SG" || "$INSTANCE_SG" == "None" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
+            echo "❌ Failed to get valid instance security group"
+            echo "INSTANCE_SG: '$INSTANCE_SG'"
             exit 1
           fi
           
