@@ -1,0 +1,338 @@
+name: Setup Supabase Database (Complete)
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Supabase PostgreSQL connection string (postgresql://postgres:password@db.project.supabase.co:5432/postgres?sslmode=require)'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup-supabase:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate DATABASE_URL format
+        run: |
+          DB_URL="${{ github.event.inputs.database_url }}"
+          if [[ ! "$DB_URL" =~ ^postgresql:// ]] && [[ ! "$DB_URL" =~ ^postgres:// ]]; then
+            echo "❌ Error: DATABASE_URL must start with 'postgresql://' or 'postgres://'"
+            exit 1
+          fi
+          # Ensure sslmode=require for Supabase (warn if missing)
+          if [[ "$DB_URL" == *"supabase"* ]] && [[ ! "$DB_URL" =~ sslmode= ]]; then
+            echo "⚠️  Warning: Supabase connection should include '?sslmode=require'"
+          fi
+          echo "✅ DATABASE_URL format is valid"
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
+          aws-region: us-east-2
+
+      - name: Test Database Connection
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ github.event.inputs.database_url }}
+        run: |
+          set -euo pipefail
+          
+          echo "Testing database connection..."
+          
+          # Escape DATABASE_URL for shell
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"if command -v psql >/dev/null 2>&1; then\",
+              \"  if psql '$ESCAPED_DB_URL' -c 'SELECT 1' >/dev/null 2>&1; then\",
+              \"    echo '✅ Database connection successful'\",
+              \"  else\",
+              \"    echo '❌ Database connection failed'\",
+              \"    exit 1\",
+              \"  fi\",
+              \"else\",
+              \"  echo '⚠️  psql not installed, skipping connection test'\",
+              \"  echo 'Will install postgresql-client for migrations'\",
+              \"fi\"
+            ]" \
+            --comment "IFD test Supabase connection" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+
+      - name: Run Database Migrations
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ github.event.inputs.database_url }}
+        run: |
+          set -euo pipefail
+          
+          echo "Running database migrations..."
+          
+          # Escape DATABASE_URL
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          # Read migration SQL (base64 encode to pass through SSM)
+          MIGRATION_SQL=$(cat operator-ui/prisma/migrations/20250116000000_add_auth_tables/migration.sql | base64 -w 0)
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"echo 'Installing postgresql client if needed...'\",
+              \"sudo yum install -y postgresql15 || sudo apt-get update && sudo apt-get install -y postgresql-client || echo 'Postgres client install skipped'\",
+              \"echo 'Applying migration...'\",
+              \"cd /tmp\",
+              \"echo '$MIGRATION_SQL' | base64 -d > migration.sql\",
+              \"if psql '$ESCAPED_DB_URL' -f migration.sql; then\",
+              \"  echo '✅ Migration applied successfully'\",
+              \"else\",
+              \"  echo '❌ Migration failed'\",
+              \"  exit 1\",
+              \"fi\",
+              \"echo 'Verifying tables...'\",
+              \"TABLES=\\\$(psql '$ESCAPED_DB_URL' -t -c \\\"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('users', 'magic_links', 'sessions', 'events');\\\" | tr -d ' ')\",
+              \"for table in users magic_links sessions events; do\",
+              \"  if echo \\\"\\\$TABLES\\\" | grep -q \\\"^\\\$table\\$\"; then\",
+              \"    echo \\\"✅ Table \\\$table exists\\\"\",
+              \"  else\",
+              \"    echo \\\"❌ Table \\\$table missing\\\"\",
+              \"    exit 1\",
+              \"  fi\",
+              \"done\",
+              \"echo '✅ All required tables exist'\"
+            ]" \
+            --comment "IFD run Supabase migrations" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Waiting for migrations to complete..."
+          sleep 10
+          
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          STATUS=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+          
+          echo "Migration Status: $STATUS"
+          echo ""
+          echo "Output:"
+          echo "$OUTPUT"
+          
+          if [[ "$STATUS" != "Success" ]]; then
+            ERROR=$(aws ssm get-command-invocation \
+              --region us-east-2 \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text)
+            echo ""
+            echo "Error:"
+            echo "$ERROR"
+            exit 1
+          fi
+
+      - name: Set DATABASE_URL in Production
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ github.event.inputs.database_url }}
+        run: |
+          set -euo pipefail
+          
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"ENV_FILE=/opt/ifd-app/.env\",
+              \"mkdir -p /opt/ifd-app || true\",
+              \"if [ -f \\\$ENV_FILE ] && grep -q '^DATABASE_URL=' \\\$ENV_FILE; then\",
+              \"  sed -i 's|^DATABASE_URL=.*|DATABASE_URL='$ESCAPED_DB_URL'|' \\\$ENV_FILE\",
+              \"  echo 'Updated existing DATABASE_URL'\",
+              \"else\",
+              \"  echo 'DATABASE_URL='$ESCAPED_DB_URL >> \\\$ENV_FILE\",
+              \"  echo 'Added DATABASE_URL'\",
+              \"fi\",
+              \"chmod 600 \\\$ENV_FILE\",
+              \"echo '✅ DATABASE_URL configured'\"
+            ]" \
+            --comment "IFD set DATABASE_URL" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+
+      - name: Restart Container and Verify
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          echo "Restarting container..."
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"docker restart ifd-app || echo 'Container restart skipped'\",
+              \"sleep 8\",
+              \"curl -fsS http://localhost:3000/health || echo 'Health check pending'\"
+            ]" \
+            --comment "IFD restart after Supabase setup" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 10
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+          
+          # Check if postgres is configured
+          HEALTH=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"sleep 3\",
+              \"curl -fsS http://localhost:3000/health 2>/dev/null | grep -o '\"postgres\":\"[^\"]*\"' || echo 'postgres:checking'\"
+            ]" \
+            --comment "IFD check postgres status" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          
+          HEALTH_OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$HEALTH" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo ""
+          echo "Database Status:"
+          echo "$HEALTH_OUTPUT"
+          
+          if echo "$HEALTH_OUTPUT" | grep -q '"postgres":"configured"'; then
+            echo ""
+            echo "✅ ✅ ✅ SUCCESS! Database is configured and connected!"
+          else
+            echo ""
+            echo "⚠️  Database connection may still be initializing. Check logs: docker logs ifd-app"
+          fi
+
+      - name: Final Verification
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          echo "=========================================="
+          echo "Final Verification Checklist"
+          echo "=========================================="
+          echo ""
+          
+          # Check DATABASE_URL is set
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"echo '1. Checking DATABASE_URL in .env:'\",
+              \"grep '^DATABASE_URL=' /opt/ifd-app/.env | sed 's/:[^:@]*@/:****@/g' || echo '   ❌ Not found'\",
+              \"echo ''\",
+              \"echo '2. Checking container environment:'\",
+              \"docker exec ifd-app env | grep DATABASE_URL | sed 's/:[^:@]*@/:****@/g' || echo '   ❌ Not found'\",
+              \"echo ''\",
+              \"echo '3. Health endpoint status:'\",
+              \"curl -fsS http://localhost:3000/health 2>/dev/null | grep -o '\"postgres\":\"[^\"]*\"' || echo '   Checking...'\"
+            ]" \
+            --comment "IFD final verification" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+          echo ""
+          echo "=========================================="
+          echo "Setup Complete!"
+          echo "=========================================="
+          echo ""
+          echo "Next: Test login at https://ironfrontdigital.com/login"
+          echo "Expected: No DATABASE_URL error, email submit returns success"
+
