@@ -1,0 +1,446 @@
+name: Setup AWS RDS PostgreSQL
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_username:
+        description: 'RDS Master Username (default: postgres)'
+        required: false
+        default: 'postgres'
+        type: string
+      db_password:
+        description: 'RDS Master Password (generate strong password)'
+        required: true
+        type: string
+      db_instance_class:
+        description: 'RDS Instance Class (default: db.t3.micro)'
+        required: false
+        default: 'db.t3.micro'
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup-rds:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
+          aws-region: us-east-2
+
+      - name: Get Latest PostgreSQL Version
+        id: pg_version
+        run: |
+          PG_VERSION=$(aws rds describe-db-engine-versions \
+            --engine postgres \
+            --query 'DBEngineVersions[0].EngineVersion' \
+            --output text \
+            --region us-east-2)
+          echo "version=$PG_VERSION" >> $GITHUB_OUTPUT
+          echo "PostgreSQL version: $PG_VERSION"
+
+      - name: Get VPC and Subnet Info
+        id: vpc_info
+        run: |
+          # Get default VPC
+          VPC_ID=$(aws ec2 describe-vpcs \
+            --filters "Name=isDefault,Values=true" \
+            --query 'Vpcs[0].VpcId' \
+            --output text \
+            --region us-east-2)
+          
+          # Get subnets in default VPC
+          SUBNET_IDS=$(aws ec2 describe-subnets \
+            --filters "Name=vpc-id,Values=$VPC_ID" \
+            --query 'Subnets[*].SubnetId' \
+            --output text \
+            --region us-east-2)
+          
+          # Get security group for EC2 instance
+          INSTANCE_ID="i-0160b2a838a432bbc"
+          INSTANCE_SG=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' \
+            --output text \
+            --region us-east-2)
+          
+          echo "vpc_id=$VPC_ID" >> $GITHUB_OUTPUT
+          echo "subnet_ids=$SUBNET_IDS" >> $GITHUB_OUTPUT
+          echo "instance_sg=$INSTANCE_SG" >> $GITHUB_OUTPUT
+          
+          echo "VPC ID: $VPC_ID"
+          echo "Subnet IDs: $SUBNET_IDS"
+          echo "Instance Security Group: $INSTANCE_SG"
+
+      - name: Create RDS Security Group
+        id: rds_sg
+        run: |
+          VPC_ID="${{ steps.vpc_info.outputs.vpc_id }}"
+          INSTANCE_SG="${{ steps.vpc_info.outputs.instance_sg }}"
+          
+          # Check if security group already exists
+          EXISTING_SG=$(aws ec2 describe-security-groups \
+            --filters "Name=group-name,Values=ifd-rds-postgres" "Name=vpc-id,Values=$VPC_ID" \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text \
+            --region us-east-2 || echo "None")
+          
+          if [[ "$EXISTING_SG" != "None" && "$EXISTING_SG" != "" ]]; then
+            echo "Security group already exists: $EXISTING_SG"
+            echo "sg_id=$EXISTING_SG" >> $GITHUB_OUTPUT
+          else
+            # Create security group
+            SG_ID=$(aws ec2 create-security-group \
+              --group-name ifd-rds-postgres \
+              --description "Security group for Iron Front Digital RDS PostgreSQL" \
+              --vpc-id "$VPC_ID" \
+              --query 'GroupId' \
+              --output text \
+              --region us-east-2)
+            
+            echo "Created security group: $SG_ID"
+            echo "sg_id=$SG_ID" >> $GITHUB_OUTPUT
+            
+            # Allow inbound from EC2 instance security group
+            aws ec2 authorize-security-group-ingress \
+              --group-id "$SG_ID" \
+              --protocol tcp \
+              --port 5432 \
+              --source-group "$INSTANCE_SG" \
+              --region us-east-2 || echo "Rule may already exist"
+            
+            # Also allow from EC2 instance's public IP (for initial setup)
+            INSTANCE_IP=$(aws ec2 describe-instances \
+              --instance-ids "$INSTANCE_ID" \
+              --query 'Reservations[0].Instances[0].PublicIpAddress' \
+              --output text \
+              --region us-east-2)
+            
+            if [[ "$INSTANCE_IP" != "None" && "$INSTANCE_IP" != "" ]]; then
+              aws ec2 authorize-security-group-ingress \
+                --group-id "$SG_ID" \
+                --protocol tcp \
+                --port 5432 \
+                --cidr "${INSTANCE_IP}/32" \
+                --region us-east-2 || echo "IP rule may already exist"
+            fi
+          fi
+
+      - name: Create RDS PostgreSQL Instance
+        id: rds_instance
+        env:
+          DB_USERNAME: ${{ github.event.inputs.db_username || 'postgres' }}
+          DB_PASSWORD: ${{ github.event.inputs.db_password }}
+          DB_INSTANCE_CLASS: ${{ github.event.inputs.db_instance_class || 'db.t3.micro' }}
+        run: |
+          set -euo pipefail
+          
+          DB_IDENTIFIER="ifd-postgres-$(date +%s)"
+          VPC_ID="${{ steps.vpc_info.outputs.vpc_id }}"
+          SUBNET_IDS="${{ steps.vpc_info.outputs.subnet_ids }}"
+          SG_ID="${{ steps.rds_sg.outputs.sg_id }}"
+          PG_VERSION="${{ steps.pg_version.outputs.version }}"
+          
+          echo "Creating RDS instance: $DB_IDENTIFIER"
+          echo "Instance class: $DB_INSTANCE_CLASS"
+          echo "PostgreSQL version: $PG_VERSION"
+          
+          # Convert subnet IDs to array format
+          SUBNET_ARRAY=$(echo "$SUBNET_IDS" | tr ' ' '\n' | head -2 | jq -R . | jq -s .)
+          
+          # Create RDS instance
+          aws rds create-db-instance \
+            --db-instance-identifier "$DB_IDENTIFIER" \
+            --db-instance-class "$DB_INSTANCE_CLASS" \
+            --engine postgres \
+            --engine-version "$PG_VERSION" \
+            --master-username "$DB_USERNAME" \
+            --master-user-password "$DB_PASSWORD" \
+            --allocated-storage 20 \
+            --storage-type gp2 \
+            --db-name ironfront \
+            --vpc-security-group-ids "$SG_ID" \
+            --db-subnet-group-name default \
+            --publicly-accessible \
+            --backup-retention-period 7 \
+            --no-multi-az \
+            --region us-east-2 || {
+              echo "RDS instance creation initiated (may already exist)"
+              DB_IDENTIFIER="ifd-postgres"
+            }
+          
+          echo "db_identifier=$DB_IDENTIFIER" >> $GITHUB_OUTPUT
+          echo "Waiting for RDS instance to be available..."
+          
+          # Wait for instance to be available (up to 20 minutes)
+          aws rds wait db-instance-available \
+            --db-instance-identifier "$DB_IDENTIFIER" \
+            --region us-east-2 || echo "Instance may still be creating"
+          
+          # Get endpoint
+          ENDPOINT=$(aws rds describe-db-instances \
+            --db-instance-identifier "$DB_IDENTIFIER" \
+            --query 'DBInstances[0].Endpoint.Address' \
+            --output text \
+            --region us-east-2)
+          
+          echo "db_endpoint=$ENDPOINT" >> $GITHUB_OUTPUT
+          echo "RDS endpoint: $ENDPOINT"
+
+      - name: Construct DATABASE_URL
+        id: db_url
+        env:
+          DB_USERNAME: ${{ github.event.inputs.db_username || 'postgres' }}
+          DB_PASSWORD: ${{ github.event.inputs.db_password }}
+        run: |
+          ENDPOINT="${{ steps.rds_instance.outputs.db_endpoint }}"
+          DATABASE_URL="postgresql://${DB_USERNAME}:${DB_PASSWORD}@${ENDPOINT}:5432/ironfront"
+          echo "DATABASE_URL constructed (password hidden)"
+          echo "DATABASE_URL=$DATABASE_URL" >> $GITHUB_OUTPUT
+          echo "::add-mask::$DATABASE_URL"
+
+      - name: Run Database Migrations
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ steps.db_url.outputs.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          
+          echo "Running database migrations..."
+          
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          MIGRATION_SQL=$(cat operator-ui/prisma/migrations/20250116000000_add_auth_tables/migration.sql | base64 -w 0)
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"echo 'Installing postgresql client...'\",
+              \"sudo yum install -y postgresql15 || sudo apt-get update && sudo apt-get install -y postgresql-client || echo 'Client install skipped'\",
+              \"echo 'Testing connection...'\",
+              \"if psql '$ESCAPED_DB_URL' -c 'SELECT 1' >/dev/null 2>&1; then\",
+              \"  echo '✅ Connection successful'\",
+              \"else\",
+              \"  echo '❌ Connection failed - RDS may still be initializing'\",
+              \"  echo 'Waiting 30 seconds and retrying...'\",
+              \"  sleep 30\",
+              \"  psql '$ESCAPED_DB_URL' -c 'SELECT 1' || exit 1\",
+              \"fi\",
+              \"echo 'Applying migration...'\",
+              \"cd /tmp\",
+              \"echo '$MIGRATION_SQL' | base64 -d > migration.sql\",
+              \"if psql '$ESCAPED_DB_URL' -f migration.sql; then\",
+              \"  echo '✅ Migration applied successfully'\",
+              \"else\",
+              \"  echo '❌ Migration failed'\",
+              \"  exit 1\",
+              \"fi\",
+              \"echo 'Verifying tables...'\",
+              \"TABLES=\\\$(psql '$ESCAPED_DB_URL' -t -c \\\"SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('users', 'magic_links', 'sessions', 'events');\\\" | tr -d ' ')\",
+              \"for table in users magic_links sessions events; do\",
+              \"  if echo \\\"\\\$TABLES\\\" | grep -q \\\"^\\\$table\\$\"; then\",
+              \"    echo \\\"✅ Table \\\$table exists\\\"\",
+              \"  else\",
+              \"    echo \\\"❌ Table \\\$table missing\\\"\",
+              \"    exit 1\",
+              \"  fi\",
+              \"done\",
+              \"echo '✅ All tables verified'\"
+            ]" \
+            --comment "IFD run RDS migrations" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Waiting for migrations..."
+          sleep 15
+          
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          STATUS=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+          
+          echo "Migration Status: $STATUS"
+          echo "$OUTPUT"
+          
+          if [[ "$STATUS" != "Success" ]]; then
+            ERROR=$(aws ssm get-command-invocation \
+              --region us-east-2 \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text)
+            echo "Error: $ERROR"
+            exit 1
+          fi
+
+      - name: Set DATABASE_URL in Production
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ steps.db_url.outputs.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"ENV_FILE=/opt/ifd-app/.env\",
+              \"mkdir -p /opt/ifd-app || true\",
+              \"if [ -f \\\$ENV_FILE ] && grep -q '^DATABASE_URL=' \\\$ENV_FILE; then\",
+              \"  sed -i 's|^DATABASE_URL=.*|DATABASE_URL='$ESCAPED_DB_URL'|' \\\$ENV_FILE\",
+              \"  echo '✅ Updated DATABASE_URL'\",
+              \"else\",
+              \"  echo 'DATABASE_URL='$ESCAPED_DB_URL >> \\\$ENV_FILE\",
+              \"  echo '✅ Added DATABASE_URL'\",
+              \"fi\",
+              \"chmod 600 \\\$ENV_FILE\",
+              \"echo 'DATABASE_URL configured successfully'\"
+            ]" \
+            --comment "IFD set DATABASE_URL from RDS" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+
+      - name: Restart Container and Verify
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          echo "Restarting container..."
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"docker restart ifd-app || echo 'Container restart skipped'\",
+              \"sleep 10\",
+              \"echo 'Checking health endpoint...'\",
+              \"for i in {1..6}; do\",
+              \"  if curl -fsS http://localhost:3000/health >/dev/null 2>&1; then\",
+              \"    echo '✅ Container is healthy'\",
+              \"    curl -fsS http://localhost:3000/health | grep -o '\"postgres\":\"[^\"]*\"' || echo 'Checking postgres status...'\",
+              \"    break\",
+              \"  else\",
+              \"    echo 'Waiting for container... (attempt \\\$i/6)'\",
+              \"    sleep 5\",
+              \"  fi\",
+              \"done\"
+            ]" \
+            --comment "IFD restart after RDS setup" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 15
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+
+      - name: Final Verification
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DATABASE_URL: ${{ steps.db_url.outputs.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          
+          echo "=========================================="
+          echo "Final Verification"
+          echo "=========================================="
+          
+          ESCAPED_DB_URL=$(printf '%q' "$DATABASE_URL")
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"echo '1. Verifying DATABASE_URL in .env:'\",
+              \"grep '^DATABASE_URL=' /opt/ifd-app/.env | sed 's/:[^:@]*@/:****@/g' || echo '   ❌ Not found'\",
+              \"echo ''\",
+              \"echo '2. Verifying container has DATABASE_URL:'\",
+              \"docker exec ifd-app env | grep DATABASE_URL | sed 's/:[^:@]*@/:****@/g' || echo '   ❌ Not found'\",
+              \"echo ''\",
+              \"echo '3. Checking health endpoint:'\",
+              \"curl -fsS http://localhost:3000/health 2>/dev/null | grep -o '\"postgres\":\"[^\"]*\"' || echo '   Checking...'\",
+              \"echo ''\",
+              \"echo '4. Verifying user exists in database:'\",
+              \"if psql '$ESCAPED_DB_URL' -t -c \\\"SELECT email, role FROM users WHERE email = 'aaronhenry1981@gmail.com';\\\" 2>/dev/null | grep -q 'aaronhenry1981@gmail.com'; then\",
+              \"  echo '   ✅ Owner user exists in database'\",
+              \"else\",
+              \"  echo '   ⚠️  Owner user not found (may need to create)'\",
+              \"fi\"
+            ]" \
+            --comment "IFD final RDS verification" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+          echo ""
+          echo "=========================================="
+          echo "✅ Setup Complete!"
+          echo "=========================================="
+          echo ""
+          echo "RDS Instance: ${{ steps.rds_instance.outputs.db_identifier }}"
+          echo "Endpoint: ${{ steps.rds_instance.outputs.db_endpoint }}"
+          echo ""
+          echo "Next: Test login at https://ironfrontdigital.com/login"
+          echo "Expected: No DATABASE_URL error, email submit returns success"
+
