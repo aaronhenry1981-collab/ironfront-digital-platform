@@ -19,9 +19,15 @@ jobs:
     steps:
       - name: Validate DATABASE_URL format
         run: |
-          if [[ ! "${{ github.event.inputs.database_url }}" =~ ^postgresql:// ]] && [[ ! "${{ github.event.inputs.database_url }}" =~ ^postgres:// ]]; then
+          DB_URL="${{ github.event.inputs.database_url }}"
+          if [[ ! "$DB_URL" =~ ^postgresql:// ]] && [[ ! "$DB_URL" =~ ^postgres:// ]]; then
             echo "❌ Error: DATABASE_URL must start with 'postgresql://' or 'postgres://'"
             exit 1
+          fi
+          # Ensure sslmode=require for Supabase (add if missing)
+          if [[ "$DB_URL" == *"supabase"* ]] && [[ ! "$DB_URL" =~ sslmode= ]]; then
+            echo "⚠️  Warning: Supabase connection should include '?sslmode=require'"
+            echo "   Consider adding it for security"
           fi
           echo "✅ DATABASE_URL format is valid"
 
