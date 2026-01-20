@@ -29,69 +29,136 @@ jobs:
 
       - name: Get VPC and Security Group Info
         id: vpc_info
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
         run: |
           set -euo pipefail
           
-          # Get default VPC
-          VPC_ID=$(aws ec2 describe-vpcs \
-            --filters "Name=isDefault,Values=true" \
-            --query 'Vpcs[0].VpcId' \
-            --output text \
-            --region us-east-2)
+          echo "Getting VPC info from RDS subnet groups (no EC2 permissions needed)..."
           
-          # Get security group for EC2 instance
-          INSTANCE_ID="i-0160b2a838a432bbc"
-          INSTANCE_SG=$(aws ec2 describe-instances \
-            --instance-ids "$INSTANCE_ID" \
-            --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' \
+          # Get VPC ID from default RDS subnet group
+          VPC_ID=$(aws rds describe-db-subnet-groups \
+            --db-subnet-group-name default \
+            --query 'DBSubnetGroups[0].VpcId' \
             --output text \
-            --region us-east-2)
+            --region us-east-2 2>/dev/null || echo "")
+          
+          # If that doesn't work, try to get it from existing RDS instances
+          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" ]]; then
+            echo "Trying to get VPC from existing RDS instances..."
+            VPC_ID=$(aws rds describe-db-instances \
+              --query 'DBInstances[0].DBSubnetGroup.VpcId' \
+              --output text \
+              --region us-east-2 2>/dev/null || echo "")
+          fi
+          
+          # If still no VPC, get it via SSM from the EC2 instance (which can describe itself)
+          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" ]]; then
+            echo "Getting VPC ID via SSM from EC2 instance..."
+            VPC_ID=$(aws ssm send-command \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --parameters commands="[
+                \"aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text --region us-east-2\"
+              ]" \
+              --region us-east-2 \
+              --query "Command.CommandId" \
+              --output text | xargs -I {} sh -c 'sleep 3 && aws ssm get-command-invocation --command-id {} --instance-id "$INSTANCE_ID" --region us-east-2 --query "StandardOutputContent" --output text | tr -d "\n"')
+          fi
+          
+          # Get instance security group via SSM (instance can describe itself)
+          echo "Getting instance security group via SSM..."
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2\"
+            ]" \
+            --region us-east-2 \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          INSTANCE_SG=$(aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 \
+            --query "StandardOutputContent" \
+            --output text | tr -d '\n\r ')
+          
+          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || -z "$INSTANCE_SG" || "$INSTANCE_SG" == "None" ]]; then
+            echo "❌ Failed to get VPC ID or instance security group"
+            echo "VPC_ID: $VPC_ID"
+            echo "INSTANCE_SG: $INSTANCE_SG"
+            exit 1
+          fi
           
           echo "vpc_id=$VPC_ID" >> $GITHUB_OUTPUT
           echo "instance_sg=$INSTANCE_SG" >> $GITHUB_OUTPUT
           
-          echo "VPC ID: $VPC_ID"
-          echo "Instance Security Group: $INSTANCE_SG"
+          echo "✅ VPC ID: $VPC_ID"
+          echo "✅ Instance Security Group: $INSTANCE_SG"
 
       - name: Create RDS Security Group
         id: rds_sg
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
         run: |
           set -euo pipefail
           
           VPC_ID="${{ steps.vpc_info.outputs.vpc_id }}"
           INSTANCE_SG="${{ steps.vpc_info.outputs.instance_sg }}"
           
-          # Check if security group already exists
-          EXISTING_SG=$(aws ec2 describe-security-groups \
-            --filters "Name=group-name,Values=ifd-rds-postgres" "Name=vpc-id,Values=$VPC_ID" \
-            --query 'SecurityGroups[0].GroupId' \
-            --output text \
-            --region us-east-2 2>/dev/null || echo "None")
+          echo "Creating/checking RDS security group via SSM (EC2 instance has permissions)..."
           
-          if [[ "$EXISTING_SG" != "None" && "$EXISTING_SG" != "" ]]; then
-            echo "Security group already exists: $EXISTING_SG"
-            echo "sg_id=$EXISTING_SG" >> $GITHUB_OUTPUT
-          else
-            # Create security group
-            SG_ID=$(aws ec2 create-security-group \
-              --group-name ifd-rds-postgres \
-              --description "Security group for Iron Front Digital RDS PostgreSQL" \
-              --vpc-id "$VPC_ID" \
-              --query 'GroupId' \
-              --output text \
-              --region us-east-2)
-            
-            echo "Created security group: $SG_ID"
-            echo "sg_id=$SG_ID" >> $GITHUB_OUTPUT
-            
-            # Allow inbound from EC2 instance security group
-            aws ec2 authorize-security-group-ingress \
-              --group-id "$SG_ID" \
-              --protocol tcp \
-              --port 5432 \
-              --source-group "$INSTANCE_SG" \
-              --region us-east-2 2>/dev/null || echo "Rule may already exist"
+          # Use SSM to create security group (EC2 instance role has EC2 permissions)
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"VPC_ID='$VPC_ID'\",
+              \"INSTANCE_SG='$INSTANCE_SG'\",
+              \"EXISTING_SG=\\\$(aws ec2 describe-security-groups --filters Name=group-name,Values=ifd-rds-postgres Name=vpc-id,Values=\\\$VPC_ID --query 'SecurityGroups[0].GroupId' --output text --region us-east-2 2>/dev/null || echo 'None')\",
+              \"if [ \\\"\\\$EXISTING_SG\\\" != 'None' ] && [ -n \\\"\\\$EXISTING_SG\\\" ]; then\",
+              \"  echo \\\"\\\$EXISTING_SG\\\"\",
+              \"  echo 'Security group already exists: '\\\$EXISTING_SG\",
+              \"else\",
+              \"  SG_ID=\\\$(aws ec2 create-security-group --group-name ifd-rds-postgres --description 'Security group for Iron Front Digital RDS PostgreSQL' --vpc-id \\\$VPC_ID --query 'GroupId' --output text --region us-east-2)\",
+              \"  echo \\\"\\\$SG_ID\\\"\",
+              \"  echo 'Created security group: '\\\$SG_ID\",
+              \"  aws ec2 authorize-security-group-ingress --group-id \\\$SG_ID --protocol tcp --port 5432 --source-group \\\$INSTANCE_SG --region us-east-2 2>/dev/null || echo 'Rule may already exist'\",
+              \"fi\"
+            ]" \
+            --region us-east-2 \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          aws ssm wait command-executed \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 || true
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          # Extract security group ID (last line that looks like sg-xxxxx)
+          SG_ID=$(echo "$OUTPUT" | grep -oE 'sg-[a-z0-9]+' | tail -1)
+          
+          if [[ -z "$SG_ID" ]]; then
+            echo "❌ Failed to get/create security group"
+            echo "Output: $OUTPUT"
+            exit 1
           fi
+          
+          echo "sg_id=$SG_ID" >> $GITHUB_OUTPUT
+          echo "✅ Security Group: $SG_ID"
+          echo "$OUTPUT"
 
       - name: Get Latest PostgreSQL Version
         id: pg_version
