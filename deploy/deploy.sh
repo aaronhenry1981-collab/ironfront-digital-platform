@@ -14,6 +14,28 @@ LOCK_FILE="/tmp/ifd-deploy.lock"
 mkdir -p "$DATA_DIR"
 chmod 700 "$DATA_DIR" || true
 
+# Load DATABASE_URL from SSM Parameter Store (if available)
+# This takes precedence over .env file
+SSM_PARAM="/ironfront/prod/DATABASE_URL"
+if command -v aws >/dev/null 2>&1; then
+  echo "[deploy] attempting to load DATABASE_URL from SSM Parameter Store: $SSM_PARAM"
+  SSM_DB_URL=$(aws ssm get-parameter \
+    --name "$SSM_PARAM" \
+    --with-decryption \
+    --query Parameter.Value \
+    --output text \
+    --region us-east-2 2>/dev/null || echo "")
+  
+  if [[ -n "$SSM_DB_URL" && "$SSM_DB_URL" =~ ^postgresql:// ]]; then
+    export DATABASE_URL="$SSM_DB_URL"
+    echo "[deploy] ✅ DATABASE_URL loaded from SSM Parameter Store"
+  else
+    echo "[deploy] ⚠️  SSM parameter not found or invalid, will use .env file if available"
+  fi
+else
+  echo "[deploy] ⚠️  AWS CLI not available, will use .env file if available"
+fi
+
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
   echo "[deploy] another deployment is running; exiting"
@@ -51,12 +73,23 @@ fi
 ENVFILE_ARGS=()
 if [[ -f "${APP_DIR}/.env" ]]; then
   ENVFILE_ARGS+=(--env-file "${APP_DIR}/.env")
-  
-  # Warn if DATABASE_URL is not set or is a placeholder
+fi
+
+# If DATABASE_URL was loaded from SSM, inject it as environment variable
+# This ensures the app process inherits it even if .env doesn't have it
+if [[ -n "${DATABASE_URL:-}" && "${DATABASE_URL}" =~ ^postgresql:// ]]; then
+  ENVFILE_ARGS+=(--env "DATABASE_URL=${DATABASE_URL}")
+  echo "[deploy] ✅ DATABASE_URL will be passed to containers from SSM"
+elif [[ -f "${APP_DIR}/.env" ]]; then
+  # Check if .env has DATABASE_URL
   if grep -q "^# DATABASE_URL=" "${APP_DIR}/.env" || ! grep -q "^DATABASE_URL=postgres" "${APP_DIR}/.env"; then
     echo "[deploy] WARNING: DATABASE_URL may not be configured. Authentication will not work."
-    echo "[deploy] Set DATABASE_URL in ${APP_DIR}/.env or use GitHub Actions workflow 'Set DATABASE_URL in Production'"
+    echo "[deploy] Set DATABASE_URL in SSM Parameter Store (/ironfront/prod/DATABASE_URL) or in ${APP_DIR}/.env"
+  else
+    echo "[deploy] ✅ DATABASE_URL found in .env file"
   fi
+else
+  echo "[deploy] WARNING: No DATABASE_URL configured (neither SSM nor .env). Authentication will not work."
 fi
 
 # Helper function to log deploy events (non-blocking)
