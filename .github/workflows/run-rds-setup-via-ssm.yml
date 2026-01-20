@@ -1,0 +1,198 @@
+name: Run Complete RDS Setup (Via SSM)
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_password:
+        description: 'RDS Master Password (generate strong password)'
+        required: true
+        type: string
+        default: 'IronFront2024!SecureRDS#Postgres'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup-rds:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::055357411476:role/ifd-github-deploy
+          aws-region: us-east-2
+
+      - name: Upload setup script to server
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          # Upload script to server
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"mkdir -p /opt/ifd-scripts\",
+              \"cat > /opt/ifd-scripts/setup-rds-complete.sh << 'SCRIPT_EOF'\",
+              \"$(cat scripts/setup-rds-complete.sh | base64 | tr -d '\n')\",
+              \"SCRIPT_EOF\",
+              \"echo '$(cat scripts/setup-rds-complete.sh | base64 -w 0)' | base64 -d > /opt/ifd-scripts/setup-rds-complete.sh\",
+              \"chmod +x /opt/ifd-scripts/setup-rds-complete.sh\",
+              \"echo 'Script uploaded successfully'\"
+            ]" \
+            --comment "IFD upload RDS setup script" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          aws ssm wait command-executed \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" || true
+
+      - name: Run complete RDS setup
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+          DB_PASSWORD: ${{ github.event.inputs.db_password }}
+        run: |
+          set -euo pipefail
+          
+          echo "Starting complete RDS setup..."
+          echo "This will take 10-15 minutes (RDS creation is the longest step)"
+          
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"export DB_PASSWORD='$DB_PASSWORD'\",
+              \"export DB_USERNAME='postgres'\",
+              \"cd /opt/ifd-scripts\",
+              \"bash setup-rds-complete.sh\"
+            ]" \
+            --comment "IFD complete RDS setup" \
+            --timeout-seconds 1800 \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Command ID: $CMD_ID"
+          echo "Waiting for setup to complete (this may take 10-15 minutes)..."
+          
+          # Wait up to 20 minutes
+          for i in {1..40}; do
+            sleep 30
+            STATUS=$(aws ssm get-command-invocation \
+              --region us-east-2 \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "InProgress")
+            
+            if [[ "$STATUS" == "Success" ]]; then
+              echo "✅ Setup completed successfully!"
+              break
+            elif [[ "$STATUS" == "Failed" ]] || [[ "$STATUS" == "Cancelled" ]]; then
+              echo "❌ Setup failed with status: $STATUS"
+              break
+            else
+              echo "  Still running... ($i/40 - $((i*30)) seconds elapsed)"
+            fi
+          done
+          
+          # Get final output
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text 2>/dev/null || echo "")
+          
+          ERROR=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardErrorContent" \
+            --output text 2>/dev/null || echo "")
+          
+          STATUS=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text 2>/dev/null || echo "Unknown")
+          
+          echo ""
+          echo "=========================================="
+          echo "Final Status: $STATUS"
+          echo "=========================================="
+          echo ""
+          echo "Output:"
+          echo "$OUTPUT"
+          echo ""
+          if [[ -n "$ERROR" ]]; then
+            echo "Errors:"
+            echo "$ERROR"
+            echo ""
+          fi
+          
+          if [[ "$STATUS" != "Success" ]]; then
+            exit 1
+          fi
+
+      - name: Verify setup
+        env:
+          INSTANCE_ID: i-0160b2a838a432bbc
+        run: |
+          set -euo pipefail
+          
+          echo "Verifying setup..."
+          
+          # Check SSM parameter exists
+          SSM_PARAM="/ironfront/prod/DATABASE_URL"
+          if aws ssm get-parameter --name "$SSM_PARAM" --region us-east-2 >/dev/null 2>&1; then
+            echo "✅ SSM parameter exists: $SSM_PARAM"
+          else
+            echo "❌ SSM parameter not found: $SSM_PARAM"
+            exit 1
+          fi
+          
+          # Check container health
+          CMD_ID=$(aws ssm send-command \
+            --region us-east-2 \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands="[
+              \"curl -fsS http://localhost:3000/health 2>/dev/null && echo '✅ Container is healthy' || echo '❌ Container not responding'\",
+              \"docker ps | grep ifd-app && echo '✅ Container is running' || echo '❌ Container not running'\"
+            ]" \
+            --comment "IFD verify setup" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          sleep 5
+          
+          OUTPUT=$(aws ssm get-command-invocation \
+            --region us-east-2 \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+          
+          echo "$OUTPUT"
+          
+          echo ""
+          echo "=========================================="
+          echo "✅ Setup Complete!"
+          echo "=========================================="
+          echo ""
+          echo "Next: Test login at https://ironfrontdigital.com/login"
+          echo "Expected: No DATABASE_URL error, email submit returns success"
+
