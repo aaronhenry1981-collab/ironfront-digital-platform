@@ -34,128 +34,33 @@ jobs:
         run: |
           set -euo pipefail
           
-          echo "Getting VPC and security group info using EC2 instance metadata..."
+          echo "Getting VPC and security group info using AWS CLI (OIDC role)..."
           
-          # Use EC2 instance metadata service (write to temp file to avoid escaping issues)
-          CMD_ID=$(aws ssm send-command \
+          # Use AWS CLI directly from GitHub Actions (OIDC role has EC2 permissions)
+          # This avoids all SSM escaping issues
+          VPC_ID=$(aws ec2 describe-instances \
             --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands="[
-              \"curl -s -X PUT http://169.254.169.254/latest/api/token -H X-aws-ec2-metadata-token-ttl-seconds:21600 > /tmp/metadata-token\",
-              \"TOKEN=\\\$(cat /tmp/metadata-token)\",
-              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/ > /tmp/macs\",
-              \"MAC=\\\$(head -1 /tmp/macs)\",
-              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/vpc-id > /tmp/vpc-id\",
-              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/security-groups > /tmp/security-groups\",
-              \"VPC_ID=\\\$(cat /tmp/vpc-id)\",
-              \"INSTANCE_SG=\\\$(head -1 /tmp/security-groups)\",
-              \"echo VPC_ID=\\\$VPC_ID\",
-              \"echo INSTANCE_SG=\\\$INSTANCE_SG\"
-            ]" \
-            --region us-east-2 \
-            --query "Command.CommandId" \
-            --output text)
+            --query 'Reservations[0].Instances[0].VpcId' \
+            --output text \
+            --region us-east-2)
           
-          echo "Waiting for SSM command to complete..."
-          sleep 8
-          
-          # Wait for command to complete
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --region us-east-2 2>&1 || echo "Command completed"
-          
-          # Get output
-          OUTPUT=$(aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --region us-east-2 \
-            --query "StandardOutputContent" \
-            --output text 2>/dev/null || echo "")
-          
-          ERROR=$(aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --region us-east-2 \
-            --query "StandardErrorContent" \
-            --output text 2>/dev/null || echo "")
-          
-          STATUS=$(aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --region us-east-2 \
-            --query "Status" \
-            --output text 2>/dev/null || echo "Unknown")
-          
-          echo "SSM Command Status: $STATUS"
-          echo "SSM Output:"
-          echo "$OUTPUT"
-          if [[ -n "$ERROR" ]]; then
-            echo "SSM Error:"
-            echo "$ERROR"
-          fi
-          
-          # Parse VPC ID and instance security group from output
-          VPC_ID=$(echo "$OUTPUT" | grep -E "^VPC_ID=" | cut -d'=' -f2- | tr -d '\n\r ' || echo "")
-          INSTANCE_SG=$(echo "$OUTPUT" | grep -E "^INSTANCE_SG=" | cut -d'=' -f2- | tr -d '\n\r ' || echo "")
+          INSTANCE_SG=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' \
+            --output text \
+            --region us-east-2)
           
           # Validate
-          if [[ -z "$VPC_ID" || ! "$VPC_ID" =~ ^vpc- ]]; then
-            echo "❌ Failed to get valid VPC ID from metadata"
+          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || ! "$VPC_ID" =~ ^vpc- ]]; then
+            echo "❌ Failed to get valid VPC ID"
             echo "VPC_ID: '$VPC_ID'"
-            echo "Trying alternative method (RDS subnet group)..."
-            
-            # Alternative: Try to get from RDS default subnet group (if it exists)
-            VPC_ID=$(aws rds describe-db-subnet-groups \
-              --db-subnet-group-name default \
-              --query 'DBSubnetGroups[0].VpcId' \
-              --output text \
-              --region us-east-2 2>/dev/null || echo "")
-            
-            if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || ! "$VPC_ID" =~ ^vpc- ]]; then
-              echo "❌ Still failed to get VPC ID"
-              exit 1
-            fi
-            echo "✅ Got VPC ID from RDS subnet group: $VPC_ID"
+            exit 1
           fi
           
-          if [[ -z "$INSTANCE_SG" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
-            echo "❌ Failed to get valid instance security group from metadata"
+          if [[ -z "$INSTANCE_SG" || "$INSTANCE_SG" == "None" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
+            echo "❌ Failed to get valid instance security group"
             echo "INSTANCE_SG: '$INSTANCE_SG'"
-            echo "Trying alternative method (AWS CLI via SSM)..."
-            
-            # Alternative: Try via AWS CLI (if available)
-            CMD_ID2=$(aws ssm send-command \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters commands="[
-                \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query Reservations[0].Instances[0].SecurityGroups[0].GroupId --output text --region us-east-2 2>/dev/null || echo)\",
-                \"echo INSTANCE_SG=\\\$INSTANCE_SG\"
-              ]" \
-              --region us-east-2 \
-              --query "Command.CommandId" \
-              --output text)
-            
-            sleep 5
-            aws ssm wait command-executed \
-              --command-id "$CMD_ID2" \
-              --instance-id "$INSTANCE_ID" \
-              --region us-east-2 2>&1 || true
-            
-            OUTPUT2=$(aws ssm get-command-invocation \
-              --command-id "$CMD_ID2" \
-              --instance-id "$INSTANCE_ID" \
-              --region us-east-2 \
-              --query "StandardOutputContent" \
-              --output text 2>/dev/null || echo "")
-            
-            INSTANCE_SG=$(echo "$OUTPUT2" | grep -E "^INSTANCE_SG=" | cut -d'=' -f2- | tr -d '\n\r ' || echo "")
-            
-            if [[ -z "$INSTANCE_SG" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
-              echo "❌ Still failed to get instance security group"
-              exit 1
-            fi
-            echo "✅ Got instance security group via AWS CLI: $INSTANCE_SG"
+            exit 1
           fi
           
           echo "vpc_id=$VPC_ID" >> $GITHUB_OUTPUT
