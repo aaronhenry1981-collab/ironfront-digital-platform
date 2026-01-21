@@ -36,16 +36,17 @@ jobs:
           
           echo "Getting VPC and security group info using EC2 instance metadata..."
           
-          # Use EC2 instance metadata service (no AWS CLI needed, no permissions needed)
+          # Use EC2 instance metadata service (simplified commands to avoid syntax errors)
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters commands="[
-              \"TOKEN=\\\$(curl -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600' 2>/dev/null || echo '')\",
-              \"VPC_ID=\\\$(curl -H \\\"X-aws-ec2-metadata-token: \\\$TOKEN\\\" http://169.254.169.254/latest/meta-data/network/interfaces/macs/ 2>/dev/null | head -1 | xargs -I {} curl -H \\\"X-aws-ec2-metadata-token: \\\$TOKEN\\\" http://169.254.169.254/latest/meta-data/network/interfaces/macs/{}/vpc-id 2>/dev/null || echo '')\",
-              \"INSTANCE_SG=\\\$(curl -H \\\"X-aws-ec2-metadata-token: \\\$TOKEN\\\" http://169.254.169.254/latest/meta-data/network/interfaces/macs/ 2>/dev/null | head -1 | xargs -I {} curl -H \\\"X-aws-ec2-metadata-token: \\\$TOKEN\\\" http://169.254.169.254/latest/meta-data/network/interfaces/macs/{}/security-groups 2>/dev/null | head -1 || echo '')\",
-              \"echo 'VPC_ID='\\\$VPC_ID\",
-              \"echo 'INSTANCE_SG='\\\$INSTANCE_SG\"
+              \"TOKEN=\\\$(curl -s -X PUT http://169.254.169.254/latest/api/token -H X-aws-ec2-metadata-token-ttl-seconds:21600)\",
+              \"MAC=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/ | head -1)\",
+              \"VPC_ID=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/vpc-id)\",
+              \"INSTANCE_SG=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/security-groups | head -1)\",
+              \"echo VPC_ID=\\\$VPC_ID\",
+              \"echo INSTANCE_SG=\\\$INSTANCE_SG\"
             ]" \
             --region us-east-2 \
             --query "Command.CommandId" \
@@ -96,9 +97,9 @@ jobs:
           
           # Validate
           if [[ -z "$VPC_ID" || ! "$VPC_ID" =~ ^vpc- ]]; then
-            echo "❌ Failed to get valid VPC ID"
+            echo "❌ Failed to get valid VPC ID from metadata"
             echo "VPC_ID: '$VPC_ID'"
-            echo "Trying alternative method..."
+            echo "Trying alternative method (RDS subnet group)..."
             
             # Alternative: Try to get from RDS default subnet group (if it exists)
             VPC_ID=$(aws rds describe-db-subnet-groups \
@@ -117,21 +118,26 @@ jobs:
           if [[ -z "$INSTANCE_SG" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
             echo "❌ Failed to get valid instance security group from metadata"
             echo "INSTANCE_SG: '$INSTANCE_SG'"
-            echo "Trying alternative method via AWS CLI..."
+            echo "Trying alternative method (AWS CLI via SSM)..."
             
             # Alternative: Try via AWS CLI (if available)
             CMD_ID2=$(aws ssm send-command \
               --instance-ids "$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
               --parameters commands="[
-                \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2 2>/dev/null || echo '')\",
-                \"echo 'INSTANCE_SG='\\\$INSTANCE_SG\"
+                \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query Reservations[0].Instances[0].SecurityGroups[0].GroupId --output text --region us-east-2 2>/dev/null || echo)\",
+                \"echo INSTANCE_SG=\\\$INSTANCE_SG\"
               ]" \
               --region us-east-2 \
               --query "Command.CommandId" \
               --output text)
             
             sleep 5
+            aws ssm wait command-executed \
+              --command-id "$CMD_ID2" \
+              --instance-id "$INSTANCE_ID" \
+              --region us-east-2 2>&1 || true
+            
             OUTPUT2=$(aws ssm get-command-invocation \
               --command-id "$CMD_ID2" \
               --instance-id "$INSTANCE_ID" \
