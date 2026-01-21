@@ -37,54 +37,89 @@ jobs:
           echo "Getting VPC and security group info via SSM (EC2 instance has permissions)..."
           
           # Get both VPC ID and instance security group in one SSM command
+          # Note: Using simplified error handling (set +e) so we can capture errors
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters commands="[
-              \"set -euo pipefail\",
-              \"VPC_ID=\\\$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text --region us-east-2)\",
-              \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2)\",
+              \"set +e\",
+              \"VPC_ID=\\\$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text --region us-east-2 2>&1)\",
+              \"INSTANCE_SG=\\\$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text --region us-east-2 2>&1)\",
               \"echo 'VPC_ID='\\\$VPC_ID\",
-              \"echo 'INSTANCE_SG='\\\$INSTANCE_SG\"
+              \"echo 'INSTANCE_SG='\\\$INSTANCE_SG\",
+              \"echo 'VPC_ERR='\\\${PIPESTATUS[0]}\",
+              \"echo 'SG_ERR='\\\${PIPESTATUS[1]}\"
             ]" \
             --region us-east-2 \
             --query "Command.CommandId" \
             --output text)
           
           echo "Waiting for SSM command to complete..."
-          sleep 8
+          sleep 10
           
-          # Wait for command to complete
+          # Wait for command to complete (allow failures so we can see the error)
           aws ssm wait command-executed \
             --command-id "$CMD_ID" \
             --instance-id "$INSTANCE_ID" \
-            --region us-east-2 || true
+            --region us-east-2 2>&1 || echo "Command completed (may have failed)"
           
-          # Get output
+          # Get both output and error
           OUTPUT=$(aws ssm get-command-invocation \
             --command-id "$CMD_ID" \
             --instance-id "$INSTANCE_ID" \
             --region us-east-2 \
             --query "StandardOutputContent" \
-            --output text)
+            --output text 2>/dev/null || echo "")
           
+          ERROR=$(aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 \
+            --query "StandardErrorContent" \
+            --output text 2>/dev/null || echo "")
+          
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region us-east-2 \
+            --query "Status" \
+            --output text 2>/dev/null || echo "Unknown")
+          
+          echo "SSM Command Status: $STATUS"
+          echo ""
           echo "SSM Output:"
           echo "$OUTPUT"
+          echo ""
+          if [[ -n "$ERROR" ]]; then
+            echo "SSM Error:"
+            echo "$ERROR"
+            echo ""
+          fi
           
           # Parse VPC ID and instance security group from output
-          VPC_ID=$(echo "$OUTPUT" | grep -E "^VPC_ID=" | cut -d'=' -f2 | tr -d '\n\r ' || echo "")
-          INSTANCE_SG=$(echo "$OUTPUT" | grep -E "^INSTANCE_SG=" | cut -d'=' -f2 | tr -d '\n\r ' || echo "")
+          VPC_ID=$(echo "$OUTPUT" | grep -E "^VPC_ID=" | cut -d'=' -f2- | tr -d '\n\r ' || echo "")
+          INSTANCE_SG=$(echo "$OUTPUT" | grep -E "^INSTANCE_SG=" | cut -d'=' -f2- | tr -d '\n\r ' || echo "")
+          
+          # Remove error messages if they're in the values
+          VPC_ID=$(echo "$VPC_ID" | grep -E "^vpc-" || echo "")
+          INSTANCE_SG=$(echo "$INSTANCE_SG" | grep -E "^sg-" || echo "")
           
           # Validate
-          if [[ -z "$VPC_ID" || "$VPC_ID" == "None" || ! "$VPC_ID" =~ ^vpc- ]]; then
+          if [[ -z "$VPC_ID" || ! "$VPC_ID" =~ ^vpc- ]]; then
             echo "❌ Failed to get valid VPC ID"
             echo "VPC_ID: '$VPC_ID'"
+            echo ""
+            echo "Full output for debugging:"
+            echo "$OUTPUT"
             exit 1
           fi
           
-          if [[ -z "$INSTANCE_SG" || "$INSTANCE_SG" == "None" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
+          if [[ -z "$INSTANCE_SG" || ! "$INSTANCE_SG" =~ ^sg- ]]; then
             echo "❌ Failed to get valid instance security group"
             echo "INSTANCE_SG: '$INSTANCE_SG'"
+            echo ""
+            echo "Full output for debugging:"
+            echo "$OUTPUT"
             exit 1
           fi
           
