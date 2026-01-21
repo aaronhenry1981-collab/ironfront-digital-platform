@@ -36,15 +36,19 @@ jobs:
           
           echo "Getting VPC and security group info using EC2 instance metadata..."
           
-          # Use EC2 instance metadata service (simplified commands to avoid syntax errors)
+          # Use EC2 instance metadata service (write to temp file to avoid escaping issues)
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters commands="[
-              \"TOKEN=\\\$(curl -s -X PUT http://169.254.169.254/latest/api/token -H X-aws-ec2-metadata-token-ttl-seconds:21600)\",
-              \"MAC=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/ | head -1)\",
-              \"VPC_ID=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/vpc-id)\",
-              \"INSTANCE_SG=\\\$(curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/security-groups | head -1)\",
+              \"curl -s -X PUT http://169.254.169.254/latest/api/token -H X-aws-ec2-metadata-token-ttl-seconds:21600 > /tmp/metadata-token\",
+              \"TOKEN=\\\$(cat /tmp/metadata-token)\",
+              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/ > /tmp/macs\",
+              \"MAC=\\\$(head -1 /tmp/macs)\",
+              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/vpc-id > /tmp/vpc-id\",
+              \"curl -s -H X-aws-ec2-metadata-token:\\\$TOKEN http://169.254.169.254/latest/meta-data/network/interfaces/macs/\\\$MAC/security-groups > /tmp/security-groups\",
+              \"VPC_ID=\\\$(cat /tmp/vpc-id)\",
+              \"INSTANCE_SG=\\\$(head -1 /tmp/security-groups)\",
               \"echo VPC_ID=\\\$VPC_ID\",
               \"echo INSTANCE_SG=\\\$INSTANCE_SG\"
             ]" \
