@@ -1,0 +1,80 @@
+name: Scheduled Jobs
+
+# Triggers POST /api/cron/run-jobs every 15 minutes. The endpoint runs:
+#   - Atlas escalation checks (SLA breaches, conversion drops)
+#   - Recommendation generators (8 of them, with outcome-driven calibration)
+#
+# Required GitHub repository secrets:
+#   APP_BASE_URL    - e.g. https://ironfrontdigital.com (no trailing slash)
+#   CRON_SECRET     - any random long string; must match the
+#                     CRON_SECRET env var on your running app
+#
+# Set these at: Settings -> Secrets and variables -> Actions
+#
+# Manual trigger: workflow_dispatch is also enabled so you can fire
+# the cron from the Actions tab without waiting for the schedule.
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub Actions cron uses UTC.
+    # Note: scheduled workflows on free GitHub plans can run with several
+    # minutes of delay during high load.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+# Don't pile up runs if a previous one is still going.
+concurrency:
+  group: scheduled-jobs
+  cancel-in-progress: false
+
+jobs:
+  run-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger cron endpoint
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${APP_BASE_URL:-}" || -z "${CRON_SECRET:-}" ]]; then
+            echo "::error::APP_BASE_URL and CRON_SECRET must be set as repository secrets"
+            exit 1
+          fi
+
+          # Capture both body and HTTP status
+          response=$(curl -sS -w '\n%{http_code}' \
+            -X POST \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            --max-time 60 \
+            --retry 2 --retry-delay 5 \
+            "$APP_BASE_URL/api/cron/run-jobs" \
+            -d '{}')
+
+          # Split body / status (last line is status, rest is body)
+          status=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP $status"
+          echo "$body" | head -c 4000
+
+          if [[ "$status" -ne 200 ]]; then
+            echo "::error::Cron endpoint returned non-200 status: $status"
+            exit 1
+          fi
+
+          # Surface the result summary to the workflow run UI
+          if command -v jq >/dev/null 2>&1; then
+            echo ""
+            echo "--- Summary ---"
+            echo "$body" | jq -r '
+              "duration: \(.duration_ms // "?")ms",
+              "ok: \(.ok // false)",
+              "recs generated: \(.recommendation_summary.generated // 0)",
+              "recs skipped: \(.recommendation_summary.skipped_existing // 0)",
+              "alerts: \(.escalation_alerts | length)",
+              if .errors and (.errors | length) > 0 then "errors: \(.errors | tostring)" else empty end
+            ' || true
+          fi
