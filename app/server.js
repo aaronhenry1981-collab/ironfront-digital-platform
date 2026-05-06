@@ -199,52 +199,70 @@ function page(title, body) {
     *{box-sizing:border-box}
     body{margin:0;background:#0b0b0d;color:#eaeaea;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
     .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
-    h1{font-size:44px;font-weight:500;margin:0 0 16px;color:#ffffff;line-height:1.2}
-    h2{font-size:36px;font-weight:500;margin:0 0 32px;color:#ffffff;line-height:1.3;text-align:center}
-    h3{font-size:20px;font-weight:500;margin:0 0 12px;color:#ffffff}
-    p{font-size:16px;color:#d1d5db;line-height:1.75;margin:0 0 16px}
-    .section{padding:80px 0;text-align:center}
-    .section-alt{background:rgba(255,255,255,0.02);padding:80px 0;text-align:center}
-    .hero{text-align:center;padding:96px 0;max-width:896px;margin:0 auto}
-    .hero h1{font-size:48px;margin-bottom:24px;color:#ffffff}
-    .hero p{font-size:20px;color:#d1d5db;margin-bottom:40px;max-width:640px;margin-left:auto;margin-right:auto}
-    .btn{display:inline-block;padding:16px 32px;border-radius:8px;text-decoration:none;font-size:18px;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+    .eyebrow{display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#ffb26b;margin-bottom:16px}
+    h1{font-size:48px;font-weight:600;margin:0 0 20px;color:#ffffff;line-height:1.15;letter-spacing:-0.02em}
+    h2{font-size:36px;font-weight:600;margin:0 0 24px;color:#ffffff;line-height:1.2;letter-spacing:-0.015em}
+    h3{font-size:20px;font-weight:600;margin:0 0 12px;color:#ffffff;letter-spacing:-0.01em}
+    p{font-size:16px;color:#d1d5db;line-height:1.7;margin:0 0 16px}
+    .lead{font-size:19px;color:#e5e7eb;line-height:1.65;margin:0 0 16px;max-width:680px}
+    .section{padding:96px 0}
+    .section-alt{background:rgba(255,255,255,0.02);padding:96px 0}
+    .section h2,.section-alt h2{text-align:center}
+    .hero{text-align:center;padding:120px 0 96px;max-width:840px;margin:0 auto}
+    .hero h1{font-size:56px;margin-bottom:24px}
+    .hero .lead{font-size:20px;color:#d1d5db;margin:0 auto 40px;max-width:640px}
+    .btn{display:inline-block;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;transition:all 0.18s ease;border:none;cursor:pointer;line-height:1.2}
     .btn-primary{background:#ff7a18;color:#0b0b0d}
-    .btn-primary:hover{background:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.3)}
-    .btn-secondary{background:transparent;color:#ff7a18;border:2px solid #ff7a18}
-    .btn-secondary:hover{background:rgba(255,122,24,0.15);border-color:#ff8a2e;color:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.2)}
-    .btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:32px}
-    .card-link{display:block;text-decoration:none;transition:all 0.2s}
-    .card-link:hover{transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2);border-color:rgba(255,122,24,0.3)}
-    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:32px;text-align:left}
-    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto}
+    .btn-primary:hover{background:#ff8a2e;transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,122,24,0.25)}
+    .btn-secondary{background:transparent;color:#ff7a18;border:1.5px solid #ff7a18}
+    .btn-secondary:hover{background:rgba(255,122,24,0.10);transform:translateY(-1px)}
+    .btn-ghost{background:transparent;color:#d1d5db;border:1px solid rgba(255,255,255,0.18)}
+    .btn-ghost:hover{border-color:rgba(255,255,255,0.4);color:#ffffff}
+    .btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+    .card-link{display:block;text-decoration:none;transition:all 0.18s ease}
+    .card-link:hover{transform:translateY(-2px);border-color:rgba(255,122,24,0.4)}
+    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.10);border-radius:12px;padding:32px;text-align:left}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto}
+    .card-grid-2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));max-width:920px}
     .card-center{text-align:center}
-    .step-number{width:56px;height:56px;background:#ff7a18;color:#0b0b0d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 20px}
-    input{padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);width:100%;max-width:440px;font-size:16px;font-family:inherit;background:rgba(255,255,255,0.05);color:#eaeaea}
-    input::placeholder{color:rgba(255,255,255,0.5)}
-    input:focus{outline:none;border-color:#ff7a18;box-shadow:0 0 0 3px rgba(255,122,24,0.2)}
-    button{padding:14px 28px;border-radius:8px;border:none;background:#ff7a18;color:#0b0b0d;font-weight:600;font-size:16px;cursor:pointer;transition:all 0.2s;width:100%;max-width:440px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
-    button:hover{background:#ff8a2e;transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,122,24,0.3)}
-    ul{list-style:none;padding:0;margin:0;max-width:640px;margin-left:auto;margin-right:auto;text-align:left}
-    li{display:flex;align-items:start;margin:16px 0;color:#d1d5db;line-height:1.75;font-size:16px}
-    li:before{content:"•";color:#ff7a18;margin-right:16px;font-size:24px;line-height:1;font-weight:bold}
-    .footer-note{padding:48px 0;border-top:1px solid rgba(255,255,255,0.12);text-align:center;margin-top:64px}
-    .footer-note p{font-size:14px;color:rgba(255,255,255,0.6);margin:0;max-width:640px;margin-left:auto;margin-right:auto}
-    .small{font-size:12px;color:rgba(255,255,255,0.4);text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08)}
-    a{color:#ffb26b;text-decoration:none;transition:color 0.2s}
-    a:hover{color:#ff7a18;text-decoration:none}
-    .card h3{color:#ffffff;cursor:default}
+    .card .feature-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0b0b0d;background:#ff7a18;padding:4px 10px;border-radius:4px;margin-bottom:12px}
+    .step-number{width:44px;height:44px;background:rgba(255,122,24,0.15);color:#ff7a18;border:1px solid rgba(255,122,24,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;margin:0 auto 20px}
+    input,select,textarea{padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);width:100%;max-width:440px;font-size:16px;font-family:inherit;background:rgba(255,255,255,0.04);color:#eaeaea}
+    input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.45)}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#ff7a18;box-shadow:0 0 0 3px rgba(255,122,24,0.15)}
+    button{padding:14px 28px;border-radius:8px;border:none;background:#ff7a18;color:#0b0b0d;font-weight:600;font-size:16px;cursor:pointer;transition:all 0.18s ease;width:100%;max-width:440px}
+    button:hover{background:#ff8a2e;transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,122,24,0.25)}
+    ul.feature-list{list-style:none;padding:0;margin:0}
+    ul.feature-list li{display:flex;align-items:flex-start;margin:14px 0;color:#d1d5db;line-height:1.6;font-size:15px;padding-left:0}
+    ul.feature-list li:before{content:"✓";color:#ff7a18;margin-right:12px;font-size:14px;font-weight:700;flex-shrink:0;margin-top:3px}
+    ul.plain{list-style:none;padding:0;margin:24px auto;max-width:640px;text-align:left}
+    ul.plain li{display:flex;align-items:flex-start;margin:12px 0;color:#d1d5db;line-height:1.65;font-size:15px}
+    ul.plain li:before{content:"•";color:#ff7a18;margin-right:14px;font-size:20px;line-height:1;flex-shrink:0}
+    .price{display:flex;align-items:baseline;gap:6px;margin:20px 0}
+    .price-amount{font-size:44px;font-weight:600;color:#ffffff;letter-spacing:-0.02em}
+    .price-period{color:#9ca3af;font-size:14px}
+    .price-annual{color:#9ca3af;font-size:13px;margin-bottom:24px}
+    .price-annual strong{color:#e5e7eb;font-weight:600}
+    .price-annual .save{color:#ff7a18;margin-left:6px}
+    .footer-note{padding:48px 0;border-top:1px solid rgba(255,255,255,0.08);text-align:center;margin-top:64px}
+    .footer-note p{font-size:13px;color:rgba(255,255,255,0.5);margin:0;max-width:640px;margin-left:auto;margin-right:auto}
+    .small{font-size:12px;color:rgba(255,255,255,0.35);text-align:center;margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06)}
+    a{color:#ffb26b;text-decoration:none;transition:color 0.15s ease}
+    a:hover{color:#ff7a18}
+    .card h3,.card h3:hover{color:#ffffff;cursor:default}
     .card p{color:#d1d5db}
-    .content-center{max-width:768px;margin:0 auto;text-align:left}
+    .content-center{max-width:760px;margin:0 auto;text-align:left}
+    .text-muted{color:#9ca3af}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);padding:6px 12px;border-radius:999px;font-size:12px;color:#d1d5db;margin:4px}
     @media (max-width:640px){
-      .hero h1{font-size:36px}
-      .hero p{font-size:18px}
-      .section,.section-alt{padding:48px 0}
+      h1,.hero h1{font-size:36px}
+      .hero p,.hero .lead{font-size:17px}
+      .section,.section-alt{padding:64px 0}
+      .hero{padding:80px 0 64px}
       .btn-group{flex-direction:column;width:100%}
-      .btn{width:100%;max-width:100%}
-      h1{font-size:32px}
+      .btn-group .btn{width:100%}
       h2{font-size:28px}
-      .card-grid{grid-template-columns:1fr}
+      .card-grid{grid-template-columns:1fr;gap:16px}
     }
   </style>
   </head><body><div class="wrap">${body}<div class="small">Iron Front Digital • v${VERSION}</div></div></body></html>`;
@@ -696,22 +714,45 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/pricing") {
     return html(res, 200, page("Pricing", `
       <div class="hero">
-        <h1>Choose Your Path</h1>
-        <p>Select the pricing structure that matches where you are in your business journey.</p>
+        <div class="eyebrow">Pricing</div>
+        <h1>Pay for the platform. That's it.</h1>
+        <p class="lead">Two tracks, monthly or annual. No setup fees, no long-term contracts, no income guarantees implied or required. Pick the one that matches where you are.</p>
       </div>
-      
+
       <div class="section-alt">
-        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(400px,1fr));max-width:1000px;">
+        <div class="card-grid card-grid-2">
           <a href="/pricing/launch" class="card card-link">
-            <h3>LaunchPath™</h3>
-            <p style="color:#d1d5db;margin:16px 0 24px;">For individuals starting a business from zero</p>
-            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View LaunchPath™ Pricing →</p>
+            <span class="feature-tag">LaunchPath™</span>
+            <h3>Building from zero</h3>
+            <p style="margin:16px 0">Three tiers from $99/mo, with annual plans that save 16%. Includes structured guidance and a clear upgrade path as your operation grows.</p>
+            <ul class="feature-list" style="margin:20px 0">
+              <li>Individual Operator — $99/mo</li>
+              <li>Builder — $299/mo (most popular)</li>
+              <li>Advanced Operator — $999/mo</li>
+            </ul>
+            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View LaunchPath pricing →</p>
           </a>
           <a href="/pricing/scale" class="card card-link">
-            <h3>Scale</h3>
-            <p style="color:#d1d5db;margin:16px 0 24px;">For existing businesses and leaders</p>
-            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View Scale Pricing →</p>
+            <span class="feature-tag">Scale</span>
+            <h3>Already operating</h3>
+            <p style="margin:16px 0">For established businesses and franchise candidates. Includes team-level visibility, multi-user access, and licensed deployment options.</p>
+            <ul class="feature-list" style="margin:20px 0">
+              <li>Organization / Leader — $599/mo</li>
+              <li>Franchise License — $10,000 one-time (3-year)</li>
+            </ul>
+            <p style="color:#ffb26b;font-size:14px;margin-top:24px;">View Scale pricing →</p>
           </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div style="max-width:680px;margin:0 auto;text-align:center">
+          <h2>Not sure which fits?</h2>
+          <p class="lead" style="margin:0 auto 32px">Apply with whichever feels closer — we route applicants to the right tier during review.</p>
+          <div class="btn-group">
+            <a href="/apply" class="btn btn-primary">Apply for access</a>
+            <a href="/" class="btn btn-ghost">Back to home</a>
+          </div>
         </div>
       </div>
     `));
@@ -720,109 +761,82 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/pricing/launch") {
     return html(res, 200, page("LaunchPath™ Pricing", `
       <div class="hero">
-        <h1>LaunchPath™ Pricing</h1>
-        <p>For individuals starting a business from zero. Choose the level of access and support that matches your commitment.</p>
+        <div class="eyebrow">LaunchPath™ Pricing</div>
+        <h1>Three tiers. One platform.</h1>
+        <p class="lead">Start where it makes sense. Step up as your operation grows. Same platform, more capacity. Annual plans save 16%.</p>
       </div>
-      
+
       <div class="section-alt">
         <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1200px;">
           <div class="card">
             <h3>Individual Operator</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$99</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
-            </div>
-            <div style="margin-bottom:32px;">
-              <span style="font-size:36px;font-weight:600;color:#ffffff;">$999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
-              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $189)</span>
-            </div>
-            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
-            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
-              <li style="font-size:14px;">Foundational access to the operating platform</li>
-              <li style="font-size:14px;">Core systems and workflows</li>
-              <li style="font-size:14px;">Basic operational visibility</li>
-              <li style="font-size:14px;">Essential automation tools</li>
-              <li style="font-size:14px;">Email support</li>
+            <div class="price"><span class="price-amount">$99</span><span class="price-period">/ month</span></div>
+            <div class="price-annual"><strong>$999</strong> / year <span class="save">save $189</span></div>
+            <ul class="feature-list">
+              <li>Foundational platform access</li>
+              <li>Intake board + assignment workflow</li>
+              <li>Core conversation tools</li>
+              <li>Basic operational visibility</li>
+              <li>Email support</li>
             </ul>
-            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Perfect for someone just starting out who wants structure without overwhelming complexity.</p>
-            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
+            <p class="text-muted" style="font-size:13px;margin:20px 0">For someone just starting — structure without overwhelming complexity.</p>
+            <a href="/apply?intent=launch&tier=individual" class="btn btn-primary" style="width:100%;text-align:center;">Get started</a>
           </div>
-          
-          <div class="card" style="border-color:rgba(255,122,24,0.6);border-width:2px;">
-            <div style="background:#ff7a18;color:#0b0b0d;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:16px;">MOST POPULAR</div>
+
+          <div class="card" style="border-color:rgba(255,122,24,0.55);box-shadow:0 0 0 1px rgba(255,122,24,0.25)">
+            <span class="feature-tag">Most popular</span>
             <h3>Builder</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$299</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
-            </div>
-            <div style="margin-bottom:32px;">
-              <span style="font-size:36px;font-weight:600;color:#ffffff;">$2,999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
-              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $589)</span>
-            </div>
-            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
-            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
-              <li style="font-size:14px;">Everything in Individual Operator</li>
-              <li style="font-size:14px;">Expanded automation and system tools</li>
-              <li style="font-size:14px;">Advanced operational visibility</li>
-              <li style="font-size:14px;">Structured support and guidance</li>
-              <li style="font-size:14px;">Priority email support</li>
-              <li style="font-size:14px;">Access to business-building workflows</li>
+            <div class="price"><span class="price-amount">$299</span><span class="price-period">/ month</span></div>
+            <div class="price-annual"><strong>$2,999</strong> / year <span class="save">save $589</span></div>
+            <ul class="feature-list">
+              <li>Everything in Individual Operator</li>
+              <li>Expanded automation + workflows</li>
+              <li>Calibrated outreach templates</li>
+              <li>SLA + escalation monitoring</li>
+              <li>Priority email support</li>
             </ul>
-            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Ideal for someone actively building a business who needs more tools and structured support.</p>
-            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
+            <p class="text-muted" style="font-size:13px;margin:20px 0">For someone actively building — more tools, structured support.</p>
+            <a href="/apply?intent=launch&tier=builder" class="btn btn-primary" style="width:100%;text-align:center;">Get started</a>
           </div>
-          
+
           <div class="card">
             <h3>Advanced Operator</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
-            </div>
-            <div style="margin-bottom:32px;">
-              <span style="font-size:36px;font-weight:600;color:#ffffff;">$9,999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
-              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $1,989)</span>
-            </div>
-            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
-            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
-              <li style="font-size:14px;">Everything in Builder</li>
-              <li style="font-size:14px;">Full platform access</li>
-              <li style="font-size:14px;">All automation and system tools</li>
-              <li style="font-size:14px;">Complete operational visibility</li>
-              <li style="font-size:14px;">High-volume capacity</li>
-              <li style="font-size:14px;">Priority support with faster response</li>
-              <li style="font-size:14px;">Advanced workflows and integrations</li>
+            <div class="price"><span class="price-amount">$999</span><span class="price-period">/ month</span></div>
+            <div class="price-annual"><strong>$9,999</strong> / year <span class="save">save $1,989</span></div>
+            <ul class="feature-list">
+              <li>Everything in Builder</li>
+              <li>Full platform access</li>
+              <li>High-volume intake capacity</li>
+              <li>LLM next-touch drafting</li>
+              <li>Faster-response support</li>
             </ul>
-            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">For serious operators managing high volume who need everything the platform offers.</p>
-            <a href="/launch" class="btn btn-primary" style="width:100%;text-align:center;">Get Started</a>
+            <p class="text-muted" style="font-size:13px;margin:20px 0">For serious operators running high volume.</p>
+            <a href="/apply?intent=launch&tier=advanced" class="btn btn-primary" style="width:100%;text-align:center;">Get started</a>
           </div>
         </div>
       </div>
-      
+
       <div class="section">
+        <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+          <div class="eyebrow">Why LaunchPath</div>
+          <h2>Built for the operator who intends to scale.</h2>
+        </div>
         <div class="content-center">
-          <h2 style="margin-bottom:24px;">Why Choose LaunchPath™?</h2>
-          <p style="margin-bottom:16px;">LaunchPath™ is designed for individuals who are starting from zero and want a structured, guided path to building a real business.</p>
-          <p style="margin-bottom:16px;">Unlike trying to figure it out alone, LaunchPath™ gives you:</p>
-          <ul style="text-align:left;max-width:640px;margin:24px auto;">
-            <li>Proven systems and workflows that work</li>
-            <li>Operational infrastructure from day one</li>
-            <li>Clear structure instead of guesswork</li>
-            <li>Scalable foundation that grows with you</li>
-            <li>Support when you need it</li>
+          <ul class="plain">
+            <li>Proven workflows instead of guesswork</li>
+            <li>Operational infrastructure from day one — not after the spreadsheets stop scaling</li>
+            <li>A clear upgrade path as volume grows</li>
+            <li>Same platform across tiers — you never have to migrate</li>
           </ul>
-          <p style="margin-top:32px;color:#ffb26b;">All plans include access to the same core platform. Higher tiers unlock more tools, capacity, and support.</p>
+        </div>
+        <div class="btn-group" style="margin-top:32px">
+          <a href="/apply?intent=launch" class="btn btn-primary">Apply for access</a>
+          <a href="/pricing" class="btn btn-ghost">Compare both tracks</a>
         </div>
       </div>
-      
-      <div class="section-alt">
-        <div class="content-center">
-          <p style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;max-width:640px;margin:0 auto;">
-            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront and save you money.
-          </p>
-        </div>
+
+      <div class="footer-note">
+        <p>Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.</p>
       </div>
     `));
   }
@@ -830,215 +844,281 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/pricing/scale") {
     return html(res, 200, page("Scale Pricing", `
       <div class="hero">
-        <h1>Scale Pricing</h1>
-        <p>For existing businesses and leaders who need operational infrastructure, visibility, and team-level support.</p>
+        <div class="eyebrow">Scale Pricing</div>
+        <h1>For organizations that already operate.</h1>
+        <p class="lead">Two options — recurring access for ongoing operations, or a one-time franchise license for organizations that want to deploy the platform under their own brand.</p>
       </div>
-      
+
       <div class="section-alt">
-        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(400px,1fr));max-width:1000px;">
+        <div class="card-grid card-grid-2">
           <div class="card">
             <h3>Organization / Leader</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$599</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ month</span>
-            </div>
-            <div style="margin-bottom:32px;">
-              <span style="font-size:36px;font-weight:600;color:#ffffff;">$5,999</span>
-              <span style="color:#d1d5db;margin-left:8px;">/ year</span>
-              <span style="color:#ff7a18;font-size:14px;margin-left:8px;">(Save $1,189)</span>
-            </div>
-            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
-            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
-              <li style="font-size:14px;">Organization-level platform access</li>
-              <li style="font-size:14px;">Team-level operational visibility</li>
-              <li style="font-size:14px;">Governance and oversight tools</li>
-              <li style="font-size:14px;">System support for distributed teams</li>
-              <li style="font-size:14px;">Multi-user access and permissions</li>
-              <li style="font-size:14px;">Priority support</li>
-              <li style="font-size:14px;">Advanced reporting and analytics</li>
+            <div class="price"><span class="price-amount">$599</span><span class="price-period">/ month</span></div>
+            <div class="price-annual"><strong>$5,999</strong> / year <span class="save">save $1,189</span></div>
+            <ul class="feature-list">
+              <li>Organization-level platform access</li>
+              <li>Team visibility + governance tools</li>
+              <li>Distributed-team coordination</li>
+              <li>Multi-user access + permissions</li>
+              <li>Advanced reporting + analytics</li>
+              <li>Priority support</li>
             </ul>
-            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">Perfect for established businesses and leaders who need operational structure, team visibility, and consistent execution across their organization.</p>
-            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Apply for Access</a>
+            <p class="text-muted" style="font-size:13px;margin:20px 0">For established businesses and leaders running coordinated teams.</p>
+            <a href="/apply?intent=scale&tier=leader" class="btn btn-primary" style="width:100%;text-align:center;">Apply for access</a>
           </div>
-          
+
           <div class="card">
             <h3>Franchise License</h3>
-            <div style="margin:24px 0;">
-              <span style="font-size:48px;font-weight:600;color:#ffffff;">$10,000</span>
-            </div>
-            <div style="margin-bottom:32px;">
-              <span style="color:#d1d5db;font-size:16px;">One-time payment</span>
-              <div style="color:#ff7a18;font-size:14px;margin-top:8px;">3-year license included</div>
-            </div>
-            <p style="color:#ffffff;font-weight:500;margin-bottom:16px;">What You Get:</p>
-            <ul style="text-align:left;margin:0 0 24px 0;padding:0;">
-              <li style="font-size:14px;">Licensed deployment of the platform</li>
-              <li style="font-size:14px;">Approved branding and customization</li>
-              <li style="font-size:14px;">Full platform access for 3 years</li>
-              <li style="font-size:14px;">White-label options</li>
-              <li style="font-size:14px;">Dedicated support and onboarding</li>
-              <li style="font-size:14px;">Custom integration support</li>
-              <li style="font-size:14px;">Franchise partner benefits</li>
+            <div class="price"><span class="price-amount">$10,000</span><span class="price-period">one-time</span></div>
+            <div class="price-annual"><strong>3-year license</strong> included</div>
+            <ul class="feature-list">
+              <li>Licensed deployment of the platform</li>
+              <li>Approved branding + white-label options</li>
+              <li>Full platform access for 3 years</li>
+              <li>Dedicated onboarding</li>
+              <li>Custom integration support</li>
+              <li>Franchise partner benefits</li>
             </ul>
-            <p style="color:#d1d5db;margin-bottom:24px;font-size:14px;">For organizations that want to deploy the Iron Front Digital platform under their own branding with full licensing rights.</p>
-            <a href="/apply" class="btn btn-secondary" style="width:100%;text-align:center;">Request Franchise Access</a>
+            <p class="text-muted" style="font-size:13px;margin:20px 0">For organizations deploying Iron Front Digital under their own brand.</p>
+            <a href="/apply?intent=scale&tier=franchise" class="btn btn-primary" style="width:100%;text-align:center;">Request franchise access</a>
           </div>
         </div>
       </div>
-      
+
       <div class="section">
+        <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+          <div class="eyebrow">Why Scale</div>
+          <h2>Operational structure without rebuilding what already works.</h2>
+        </div>
         <div class="content-center">
-          <h2 style="margin-bottom:24px;">Why Choose Scale?</h2>
-          <p style="margin-bottom:16px;">Scale is designed for existing businesses and leaders who already operate but need better structure, visibility, and team-level support.</p>
-          <p style="margin-bottom:16px;">Scale gives you:</p>
-          <ul style="text-align:left;max-width:640px;margin:24px auto;">
-            <li>Operational infrastructure without rebuilding</li>
-            <li>Team-level visibility and governance</li>
-            <li>Consistent execution across locations</li>
-            <li>System support for distributed operations</li>
-            <li>Multi-user access and permissions</li>
-            <li>Advanced reporting and oversight</li>
+          <ul class="plain">
+            <li>Team-level visibility — see what every operator is doing without hovering</li>
+            <li>Consistent execution across distributed teams and locations</li>
+            <li>Multi-user permissions, governance, audit trail</li>
+            <li>Reporting and analytics designed for organizational decision-making</li>
+            <li>Application required so we can match capacity to your operation</li>
           </ul>
-          <p style="margin-top:32px;color:#ffb26b;">Scale plans require application to ensure alignment and appropriate platform use for organizational needs.</p>
+        </div>
+        <div class="btn-group" style="margin-top:32px">
+          <a href="/apply?intent=scale" class="btn btn-primary">Apply for access</a>
+          <a href="/pricing" class="btn btn-ghost">Compare both tracks</a>
         </div>
       </div>
-      
-      <div class="section-alt">
-        <div class="content-center">
-          <p style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;max-width:640px;margin:0 auto;">
-            Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront and save you money.
-          </p>
-        </div>
+
+      <div class="footer-note">
+        <p>Pricing reflects platform access only. No earnings or outcomes are guaranteed. Annual plans billed upfront.</p>
       </div>
     `));
   }
   
   if (url.pathname === "/apply") {
-    return html(res, 200, page("Apply", `
+    return html(res, 200, page("Apply for access", `
       <div class="hero">
-        <h1>Apply for Access</h1>
-        <p style="max-width:640px;margin:0 auto 32px;">Select your path to get started.</p>
-        <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:800px;">
+        <div class="eyebrow">Application</div>
+        <h1>Apply for platform access.</h1>
+        <p class="lead">Iron Front Digital is gated by application — not because access is scarce, but because the platform works best when matched to the right tier and operator. Pick a path; we'll get back within 1–2 business days.</p>
+      </div>
+
+      <div class="section-alt">
+        <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+          <div class="eyebrow">Which fits you</div>
+          <h2>Two paths.</h2>
+        </div>
+        <div class="card-grid card-grid-2">
           <a href="/scale" class="card card-link">
-            <h3>Scale an Existing Business</h3>
-            <p>For established businesses and organizations.</p>
+            <span class="feature-tag">Scale</span>
+            <h3>I already run a business.</h3>
+            <p>You have customers, operators, or a team. You need operational structure, team-level visibility, and consistent execution across distributed work — without rebuilding.</p>
+            <p style="color:#ffb26b;font-size:14px;margin-top:20px">Apply for Scale →</p>
           </a>
           <a href="/launch" class="card card-link">
-            <h3>Start a Business</h3>
-            <p>For individuals starting from zero.</p>
+            <span class="feature-tag">LaunchPath™</span>
+            <h3>I'm starting from zero.</h3>
+            <p>You're building a business and want infrastructure from day one — not after the spreadsheets stop scaling. Includes structured guidance and a clear upgrade path.</p>
+            <p style="color:#ffb26b;font-size:14px;margin-top:20px">Apply for LaunchPath →</p>
           </a>
         </div>
+        <p style="text-align:center;margin-top:32px;font-size:14px;color:#9ca3af">
+          Not sure which fits? Pick the closer match — we route to the right tier during review.
+        </p>
+      </div>
+
+      <div class="footer-note">
+        <p>Iron Front Digital is operational software and infrastructure. We do not offer income guarantees, business opportunities, or compensation programs. Outcomes depend on execution.</p>
       </div>
     `));
   }
   
   if (url.pathname === "/mlm" || url.pathname === "/biab") {
     const source = url.pathname.replace("/", "");
-    return html(res, 200, page("Apply", `
+    const isScale = source === "mlm";
+    const headline = isScale
+      ? "Operational infrastructure for organizations that already exist."
+      : "A real business needs real systems. Start with both.";
+    const subhead = isScale
+      ? "We don't replace your business. We make it operate better — with intake routing, conversation tools, SLA monitoring, and outcome attribution that runs without constant manual intervention."
+      : "Structured guidance, working systems, and an upgrade path — so the business you build today still works at 10x the volume.";
+    const eyebrow = isScale ? "Scale" : "LaunchPath™";
+    const benefits = isScale
+      ? [
+          { h: "Team-level visibility", p: "See where every applicant, lead, and operator action stands across your organization. No more guessing who owns what." },
+          { h: "Distributed-team coordination", p: "Auto-routing assigns intakes to the right operator. SLA breaches, conversion drops, and stale work get surfaced before they fall through." },
+          { h: "Outreach that learns", p: "Templates with calibrated confidence — the platform tells you which messages convert and suggests the next best touch for each applicant." },
+          { h: "Compliance-friendly by design", p: "Owner-only access, full audit trail, magic-link auth. No income guarantees implied or required anywhere on the platform." },
+        ]
+      : [
+          { h: "Structure from day one", p: "Stop cobbling together spreadsheets. Get a real intake board, assignment workflow, and conversation tools the day you start." },
+          { h: "Guidance built into the workflow", p: "The platform proposes the next move with calibrated confidence — based on what's worked for similar applicants in similar situations." },
+          { h: "Built-in upgrade path", p: "Start with Individual Operator. Step up to Builder, Advanced Operator, and beyond as your volume grows. Same platform, more capacity." },
+          { h: "Pay for what you use", p: "$99/mo to start. Annual plans save 16%. No long-term contracts, no setup fees." },
+        ];
+    const ctaIntent = isScale ? "scale" : "launch";
+
+    return html(res, 200, page(isScale ? "Scale" : "LaunchPath™", `
       <div class="hero">
-        <h1>${source === "mlm" ? "Scale Your Existing Business" : "Start a Business"}</h1>
-        <p style="max-width:640px;margin:0 auto 32px;">${source === "mlm"
-          ? "Infrastructure, automation, and systems for established network marketing organizations."
-          : "Structured guidance and systems to build a real business with an upgrade path."
-        }</p>
-        <form method="POST" action="/apply" style="max-width:440px;margin:0 auto;">
-          <input type="hidden" name="source" value="${source}" />
-          <input required type="email" name="email" placeholder="Your email" style="margin-bottom:16px;" />
-          <button type="submit" style="width:100%;">Apply Now</button>
-        </form>
-        <div style="margin-top:24px;">
-          <a href="/" style="color:#ffb26b;font-size:14px;">← Back to Home</a>
+        <div class="eyebrow">${eyebrow}</div>
+        <h1>${headline}</h1>
+        <p class="lead">${subhead}</p>
+        <div class="btn-group">
+          <a href="/pricing/${ctaIntent}" class="btn btn-primary">See ${isScale ? "Scale" : "LaunchPath"} pricing</a>
+          <a href="/apply?intent=${ctaIntent}" class="btn btn-secondary">Apply for access</a>
         </div>
+      </div>
+
+      <div class="section-alt">
+        <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+          <div class="eyebrow">What you get</div>
+          <h2>Built for ${isScale ? "operators with people on the team" : "operators who intend to scale"}.</h2>
+        </div>
+        <div class="card-grid card-grid-2">
+          ${benefits.map(b => `
+            <div class="card">
+              <h3>${b.h}</h3>
+              <p>${b.p}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="section">
+        <div style="max-width:720px;margin:0 auto;text-align:center">
+          <div class="eyebrow">Quick apply</div>
+          <h2>Tell us your email. We'll route you to the right tier.</h2>
+          <p class="text-muted" style="margin-bottom:32px">Or skip ahead to the full application below.</p>
+          <form method="POST" action="/apply" style="max-width:440px;margin:0 auto;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+            <input type="hidden" name="source" value="${source}" />
+            <input required type="email" name="email" placeholder="you@company.com" style="flex:1;min-width:240px;max-width:320px" />
+            <button type="submit" style="width:auto;flex-shrink:0">Apply now</button>
+          </form>
+          <p class="text-muted" style="margin-top:32px;font-size:14px">
+            <a href="/pricing/${ctaIntent}">View ${isScale ? "Scale" : "LaunchPath"} pricing →</a>
+            &nbsp;·&nbsp;
+            <a href="/">← Back to home</a>
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        <p>Iron Front Digital is operational software and infrastructure. We do not offer income guarantees, business opportunities, or compensation programs. Outcomes depend on execution.</p>
       </div>
     `));
   }
 
   return html(res, 200, page("Iron Front Digital", `
     <div class="hero">
-      <h1>The Platform That Runs the Business Behind the Business</h1>
-      <p>Iron Front Digital provides operational infrastructure for people building, scaling, or managing real businesses.</p>
+      <div class="eyebrow">Operational Infrastructure</div>
+      <h1>Run the business, not the busywork.</h1>
+      <p class="lead">Iron Front Digital is the operating layer for serious businesses — intake routing, conversation tools, operator workflows, and outcome-tracked recommendations. Built for people who intend to operate, not experiment.</p>
       <div class="btn-group">
-        <a href="/scale" class="btn btn-primary">Scale an Existing Business</a>
-        <a href="/launch" class="btn btn-secondary">Start a Business With Structure</a>
+        <a href="/scale" class="btn btn-primary">Scale an existing business</a>
+        <a href="/launch" class="btn btn-secondary">Build from zero</a>
       </div>
     </div>
-    
+
     <div class="section-alt">
-      <h2>What This Platform Is</h2>
-      <div class="content-center">
-        <p>Operational software and infrastructure designed to support long-term business operations.</p>
-        <p>Systems, automation, and visibility tools that help businesses operate consistently without constant manual intervention.</p>
-        <p>Built for organizations and individuals who intend to operate businesses over years, not experiment with short-term tactics.</p>
+      <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+        <div class="eyebrow">What you get</div>
+        <h2>A platform that does the operating, so you can focus on the business.</h2>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Intake routing & operator console</h3>
+          <p>New leads land on a Kanban board, auto-assigned to the right operator. Status, notes, assignment, and a complete conversation thread live in one place.</p>
+        </div>
+        <div class="card">
+          <h3>Outreach with calibrated playbooks</h3>
+          <p>Reusable message templates that learn — confidence scores adjust automatically as outcomes accumulate. The platform suggests the next best touch and drafts it for you.</p>
+        </div>
+        <div class="card">
+          <h3>SLA monitoring & escalation</h3>
+          <p>Stale unassigned intakes, missed first-contact windows, and conversion-rate drops get surfaced before they fall through.</p>
+        </div>
+        <div class="card">
+          <h3>Outcome attribution</h3>
+          <p>Every applied recommendation, every sent message, every status change is linked back to the eventual outcome — so what works rises to the top automatically.</p>
+        </div>
+        <div class="card">
+          <h3>Magic-link auth & audit trail</h3>
+          <p>Owner-only access, no passwords. Every operator action is recorded to a tamper-evident audit log.</p>
+        </div>
+        <div class="card">
+          <h3>Stripe billing built in</h3>
+          <p>Customer creation, checkout, subscription management, and webhook-driven status updates — wired up out of the box.</p>
+        </div>
       </div>
     </div>
-    
+
     <div class="section">
-      <h2>Who This Is For</h2>
-      <div class="card-grid">
+      <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+        <div class="eyebrow">Who it's for</div>
+        <h2>Two paths into the platform.</h2>
+      </div>
+      <div class="card-grid card-grid-2">
         <a href="/scale" class="card card-link">
-          <h3>Existing Business Operators</h3>
-          <p>For people who already run businesses and need better operational structure, visibility, and automation.</p>
+          <span class="feature-tag">Scale</span>
+          <h3>You already run a business.</h3>
+          <p>For organizations and leaders who need better operational structure, team-level visibility, and consistent execution across distributed teams.</p>
+          <p style="color:#ffb26b;font-size:14px;margin-top:20px">See Scale →</p>
         </a>
         <a href="/launch" class="card card-link">
-          <h3>Starting From Zero</h3>
-          <p>For people starting a business from zero who want structure, systems, and guidance rather than guesswork.</p>
-        </a>
-        <a href="/scale" class="card card-link">
-          <h3>Distributed Teams</h3>
-          <p>For organizations managing distributed teams who need operational visibility and consistent execution across locations.</p>
+          <span class="feature-tag">LaunchPath™</span>
+          <h3>You're starting from zero.</h3>
+          <p>Structured guidance, systems, and an upgrade path — for people building a real business and want infrastructure from day one, not after they outgrow spreadsheets.</p>
+          <p style="color:#ffb26b;font-size:14px;margin-top:20px">See LaunchPath →</p>
         </a>
       </div>
     </div>
-    
+
     <div class="section-alt">
-      <h2>What This Is Not</h2>
-      <ul>
-        <li>Not an MLM</li>
-        <li>Not a business opportunity</li>
-        <li>No income guarantees</li>
-        <li>No recruiting promises</li>
-      </ul>
-    </div>
-    
-    <div class="section">
-      <h2>How It Works</h2>
+      <div style="text-align:center;max-width:720px;margin:0 auto 48px">
+        <div class="eyebrow">How it works</div>
+        <h2>Three steps to operating differently.</h2>
+      </div>
       <div class="card-grid">
         <div class="card card-center">
           <div class="step-number">1</div>
-          <h3>Choose a Path</h3>
-          <p>Select Scale for existing businesses or Launch for starting from zero.</p>
-          <div style="margin-top:20px;">
-            <a href="/scale" class="btn btn-primary" style="font-size:14px;padding:10px 20px;">Scale</a>
-            <a href="/launch" class="btn btn-secondary" style="font-size:14px;padding:10px 20px;margin-left:8px;">Launch</a>
-          </div>
+          <h3>Choose a path</h3>
+          <p>Scale if you already have a business. LaunchPath if you're starting from zero.</p>
         </div>
-        <a href="/apply" class="card card-link card-center">
+        <div class="card card-center">
           <div class="step-number">2</div>
-          <h3>Apply for Access</h3>
-          <p>Complete the application process to ensure alignment and appropriate platform use.</p>
-        </a>
+          <h3>Apply for access</h3>
+          <p>A short application so we can match you to the right tier and operator.</p>
+        </div>
         <div class="card card-center">
           <div class="step-number">3</div>
-          <h3>Operate Within the Platform</h3>
-          <p>Use the operational tools, systems, and visibility features to run your business.</p>
+          <h3>Start operating</h3>
+          <p>Provision happens within 24 hours. The platform takes over the operational layer from day one.</p>
         </div>
       </div>
-    </div>
-    
-    <div class="section-alt">
-      <h2>Built for People Who Intend to Operate, Not Experiment</h2>
-      <div class="btn-group">
-        <a href="/pricing" class="btn btn-primary">View Pricing</a>
-        <a href="/apply" class="btn btn-secondary">Apply for Access</a>
-      </div>
-      <div style="margin-top:32px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
-        <a href="/pricing/launch" style="color:#ffb26b;font-size:14px;">LaunchPath™ Pricing →</a>
-        <a href="/pricing/scale" style="color:#ffb26b;font-size:14px;">Scale Pricing →</a>
+      <div class="btn-group" style="margin-top:48px">
+        <a href="/pricing" class="btn btn-primary">See pricing</a>
+        <a href="/apply" class="btn btn-secondary">Apply now</a>
       </div>
     </div>
-    
+
     <div class="footer-note">
-      <p>Iron Front Digital provides software and infrastructure. Outcomes depend on execution and external factors.</p>
+      <p>Iron Front Digital is operational software and infrastructure. We do not offer income guarantees, business opportunities, or compensation programs. Outcomes depend on execution.</p>
     </div>
   `));
 });
