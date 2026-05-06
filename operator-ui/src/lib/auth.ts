@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 import { db } from './db'
 import crypto from 'crypto'
 
-export const OWNER_EMAIL = 'aaronhenry1981@gmail.com'
+export const OWNER_EMAIL: string = 'aaronhenry1981@gmail.com'
 export const ROLE_OWNER = 'owner'
 
 export type UserRole = 'operator' | 'participant' | 'owner'
@@ -82,6 +82,14 @@ export function hasOperatorAccess(user: User | null): boolean {
  */
 export function isOwner(user: User | null): boolean {
   return user?.role === 'owner' && user?.email === OWNER_EMAIL
+}
+
+/**
+ * Check if a role can perform segment-level actions
+ * (intake reassignment, segment edits, etc.)
+ */
+export function canDoSegmentActions(role: string): boolean {
+  return role === 'owner' || role === 'operator'
 }
 
 /**

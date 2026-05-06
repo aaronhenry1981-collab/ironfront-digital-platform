@@ -34,10 +34,10 @@ export default function ApplyCompletePage() {
               If payment was required, it has already been processed.
             </p>
             <p className="leading-relaxed">
-              If approval is required, you'll hear from us shortly.
+              If approval is required, you&apos;ll hear from us shortly.
             </p>
             <p className="font-medium leading-relaxed">
-              You'll receive a confirmation email with next steps.
+              You&apos;ll receive a confirmation email with next steps.
             </p>
           </div>
           <Link

@@ -52,7 +52,8 @@ export function computeEngagementState(inputs: EngagementInputs): ParticipantSta
   }
 
   // Stalled: no activity past threshold
-  if (daysSinceActivity > 30 && lifecycle_stage !== 'exited') {
+  // (lifecycle_stage 'exited' / 'dormant' already returned 'inactive' above)
+  if (daysSinceActivity > 30) {
     return 'stalled'
   }
 

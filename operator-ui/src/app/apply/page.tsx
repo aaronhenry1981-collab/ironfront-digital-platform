@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import PublicLayout from '@/components/public/PublicLayout'
 
-export default function ApplyPage() {
+function ApplyPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [intent, setIntent] = useState<string>('')
@@ -189,7 +189,7 @@ export default function ApplyPage() {
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Briefly describe what you're building or managing.
+                Briefly describe what you&apos;re building or managing.
               </label>
               <textarea
                 id="description"
@@ -243,5 +243,13 @@ export default function ApplyPage() {
         </div>
       </div>
     </PublicLayout>
+  )
+}
+
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={null}>
+      <ApplyPageContent />
+    </Suspense>
   )
 }

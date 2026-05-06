@@ -11,9 +11,9 @@ import crypto from 'crypto'
  */
 export function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude ambiguous chars (I, O, 0, 1)
-  const bytes = crypto.randomBytes(4)
+  const bytes = crypto.randomBytes(8)
   let code = ''
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     code += chars[bytes[i] % chars.length]
   }
   // Add hyphen for readability: XXXX-XXXX

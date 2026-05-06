@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Fetch intakes scoped by role
     const intakes = await intakesRepo.findByOrg(
       orgId,
-      context.user.id,
+      user.id,
       context.role
     )
 
