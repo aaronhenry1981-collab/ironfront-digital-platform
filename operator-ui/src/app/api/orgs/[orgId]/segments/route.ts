@@ -11,6 +11,8 @@ import { resolveOrgContext, getCurrentUser } from '@/lib/auth'
 import { segmentsRepo } from '@/lib/repositories/segments'
 import { writeAuditEvent, AuditEventTypes } from '@/lib/audit'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { orgId: string } }

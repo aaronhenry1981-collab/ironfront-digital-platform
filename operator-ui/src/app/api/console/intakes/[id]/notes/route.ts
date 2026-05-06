@@ -11,6 +11,8 @@ import { intakesRepo } from '@/lib/repositories/intakes'
 
 const MOCK_ORG_ID = '00000000-0000-0000-0000-000000000002'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

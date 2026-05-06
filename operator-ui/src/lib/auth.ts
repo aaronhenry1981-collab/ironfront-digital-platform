@@ -64,7 +64,14 @@ export async function getCurrentUser(): Promise<User | null> {
       email: session.user.email,
       role: (session.user.role as UserRole) || null,
     }
-  } catch (error) {
+  } catch (error: any) {
+    // Next.js throws this when cookies()/headers() are read inside a route
+    // it's trying to render statically; it must propagate so Next can mark
+    // the route as dynamic. Swallowing it produces noisy build logs and
+    // can hide the dynamic detection.
+    if (error?.digest === 'DYNAMIC_SERVER_USAGE') {
+      throw error
+    }
     console.error('Error getting current user:', error)
     return null
   }

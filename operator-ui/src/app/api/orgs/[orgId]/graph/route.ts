@@ -13,6 +13,8 @@ import { participantsRepo } from '@/lib/repositories/participants'
 import { relationshipsRepo } from '@/lib/repositories/relationships'
 import { writeAuditEvent, AuditEventTypes } from '@/lib/audit'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { orgId: string } }

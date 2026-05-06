@@ -478,8 +478,9 @@ const server = http.createServer((req, res) => {
         ).catch(() => {});
 
         // Set session cookie and redirect to console
+        // Cookie name must match operator-ui (src/lib/auth.ts) so both apps share session state
         const cookieOptions = [
-          `ifd_session=${sessionId}`,
+          `session_id=${sessionId}`,
           "HttpOnly",
           "SameSite=Lax",
           `Path=/`,
@@ -499,6 +500,34 @@ const server = http.createServer((req, res) => {
         res.writeHead(302, { Location: "/login?error=verification_failed" });
         res.end();
       }
+    })();
+    return;
+  }
+
+  // Auth API routes - POST /api/auth/logout
+  // Mirrors operator-ui/src/app/api/auth/logout/route.ts so logout works
+  // regardless of which app served the request.
+  if (url.pathname === "/api/auth/logout" && req.method === "POST") {
+    const cookieHeader = req.headers.cookie || "";
+    const match = cookieHeader.match(/(?:^|;\s*)session_id=([^;]+)/);
+    const sessionId = match ? match[1] : null;
+
+    (async () => {
+      if (sessionId && pgPool) {
+        try {
+          await pgPool.query("DELETE FROM sessions WHERE id = $1", [sessionId]);
+        } catch (e) {
+          console.error("Error deleting session on logout:", e?.message || e);
+        }
+      }
+
+      // Clear cookie regardless of DB outcome so the client is logged out.
+      const expired = "Thu, 01 Jan 1970 00:00:00 GMT";
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Set-Cookie": `session_id=; HttpOnly; SameSite=Lax; Path=/; Expires=${expired}`,
+      });
+      res.end(JSON.stringify({ success: true }));
     })();
     return;
   }
