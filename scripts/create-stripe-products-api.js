@@ -10,18 +10,13 @@
  *   STRIPE_SECRET_KEY=sk_test_... node scripts/create-stripe-products-api.js
  */
 
-// Try to load stripe - works with both CommonJS and ES modules
 let Stripe;
 try {
   Stripe = require('stripe');
 } catch (e) {
-  try {
-    Stripe = (await import('stripe')).default;
-  } catch (e2) {
-    console.error('❌ ERROR: Stripe package not found');
-    console.error('   Install with: npm install stripe');
-    process.exit(1);
-  }
+  console.error('ERROR: Stripe package not found');
+  console.error('  Install with: npm install stripe');
+  process.exit(1);
 }
 
 const fs = require('fs');

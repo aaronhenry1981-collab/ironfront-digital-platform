@@ -14,6 +14,8 @@ import { intakesRepo } from '@/lib/repositories/intakes'
 // TODO: Get orgId from auth/session
 const MOCK_ORG_ID = '00000000-0000-0000-0000-000000000002'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Resolve user and org context
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch intakes scoped by role
     const intakes = await intakesRepo.findByOrg(
       orgId,
-      context.user.id,
+      user.id,
       context.role
     )
 

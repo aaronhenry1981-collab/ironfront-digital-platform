@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import ConsoleLayout from '@/components/layout/ConsoleLayout'
 import { db } from '@/lib/db'
 import LogoutButton from '@/components/LogoutButton'
+import RunJobsNowButton from '@/components/owner/RunJobsNowButton'
 
 const INTAKE_ORG_ID = process.env.INTAKE_ORG_ID || '00000000-0000-0000-0000-000000000000'
 
@@ -158,9 +159,12 @@ export default async function OwnerConsolePage() {
   return (
     <ConsoleLayout title="Owner Console">
       <div className="p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-medium text-gray-900">Owner Console</h1>
-          <p className="text-gray-600 mt-2">System status and operational overview</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-medium text-gray-900">Owner Console</h1>
+            <p className="text-gray-600 mt-2">System status and operational overview</p>
+          </div>
+          <RunJobsNowButton />
         </div>
 
         {/* System Status */}

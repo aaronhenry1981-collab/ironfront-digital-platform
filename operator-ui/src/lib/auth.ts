@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 import { db } from './db'
 import crypto from 'crypto'
 
-export const OWNER_EMAIL = 'aaronhenry1981@gmail.com'
+export const OWNER_EMAIL: string = 'aaronhenry1981@gmail.com'
 export const ROLE_OWNER = 'owner'
 
 export type UserRole = 'operator' | 'participant' | 'owner'
@@ -64,7 +64,14 @@ export async function getCurrentUser(): Promise<User | null> {
       email: session.user.email,
       role: (session.user.role as UserRole) || null,
     }
-  } catch (error) {
+  } catch (error: any) {
+    // Next.js throws this when cookies()/headers() are read inside a route
+    // it's trying to render statically; it must propagate so Next can mark
+    // the route as dynamic. Swallowing it produces noisy build logs and
+    // can hide the dynamic detection.
+    if (error?.digest === 'DYNAMIC_SERVER_USAGE') {
+      throw error
+    }
     console.error('Error getting current user:', error)
     return null
   }
@@ -82,6 +89,14 @@ export function hasOperatorAccess(user: User | null): boolean {
  */
 export function isOwner(user: User | null): boolean {
   return user?.role === 'owner' && user?.email === OWNER_EMAIL
+}
+
+/**
+ * Check if a role can perform segment-level actions
+ * (intake reassignment, segment edits, etc.)
+ */
+export function canDoSegmentActions(role: string): boolean {
+  return role === 'owner' || role === 'operator'
 }
 
 /**

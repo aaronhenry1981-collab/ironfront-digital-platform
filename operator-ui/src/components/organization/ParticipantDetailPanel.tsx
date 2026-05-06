@@ -37,11 +37,13 @@ export default function ParticipantDetailPanel({
       return
     }
 
+    const participantId = participant.id
+
     async function loadDetail() {
       try {
         setLoading(true)
         setError(null)
-        const data = await fetchParticipantDetail(orgId, participant.id)
+        const data = await fetchParticipantDetail(orgId, participantId)
         setDetail(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load participant')

@@ -13,6 +13,12 @@ const STATUS_COLUMNS: Array<{ status: string; label: string }> = [
   { status: 'closed', label: 'Closed/Lost' },
 ]
 
+// The 'closed' column displays both 'closed' and 'lost' intakes
+function matchesColumn(intakeStatus: string, column: string): boolean {
+  if (column === 'closed') return intakeStatus === 'closed' || intakeStatus === 'lost'
+  return intakeStatus === column
+}
+
 export default function IntakePage() {
   const [intakes, setIntakes] = useState<Intake[]>([])
   const [loading, setLoading] = useState(true)

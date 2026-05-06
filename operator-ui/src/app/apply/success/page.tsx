@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PublicLayout from '@/components/public/PublicLayout'
 
-export default function ApplySuccessPage() {
+function ApplySuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -55,7 +55,7 @@ export default function ApplySuccessPage() {
               </svg>
             </div>
             <h1 className="text-4xl sm:text-5xl font-medium text-gray-900 mb-5 leading-tight">
-              You're In. Here's What Happens Next.
+              You&apos;re In. Here&apos;s What Happens Next.
             </h1>
           </div>
 
@@ -77,11 +77,11 @@ export default function ApplySuccessPage() {
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-gray-400">•</span>
-                <span>You'll receive next-step instructions by email</span>
+                <span>You&apos;ll receive next-step instructions by email</span>
               </li>
             </ul>
             <p className="text-gray-700 font-medium">
-              You don't need to do anything else right now.
+              You don&apos;t need to do anything else right now.
             </p>
           </div>
 
@@ -118,6 +118,14 @@ export default function ApplySuccessPage() {
         </div>
       </div>
     </PublicLayout>
+  )
+}
+
+export default function ApplySuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <ApplySuccessContent />
+    </Suspense>
   )
 }
 

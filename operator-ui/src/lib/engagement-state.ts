@@ -5,6 +5,10 @@
  */
 
 import { Participant, ParticipantStatus, LifecycleStage } from './types'
+import {
+  getActiveEngagementConfig,
+  EngagementThresholds,
+} from './engagement-config'
 
 interface EngagementInputs {
   last_activity_at: string | null
@@ -14,22 +18,19 @@ interface EngagementInputs {
 }
 
 /**
- * Compute engagement state from inputs
- * Versioned, centralized, auditable
+ * Compute engagement state from inputs using a specific threshold set.
+ * Pure function - takes thresholds explicitly so it stays unit-testable
+ * without DB access.
  */
-export function computeEngagementState(inputs: EngagementInputs): ParticipantStatus {
+export function computeEngagementStateWith(
+  inputs: EngagementInputs,
+  thresholds: EngagementThresholds
+): ParticipantStatus {
   const { last_activity_at, lifecycle_stage, event_frequency_last_30d, onboarding_completed } = inputs
 
-  // Inactive: exited or long-term dormancy
-  if (lifecycle_stage === 'exited') {
-    return 'inactive'
-  }
+  if (lifecycle_stage === 'exited') return 'inactive'
+  if (lifecycle_stage === 'dormant') return 'inactive'
 
-  if (lifecycle_stage === 'dormant') {
-    return 'inactive'
-  }
-
-  // No activity data
   if (!last_activity_at) {
     if (lifecycle_stage === 'invited' || lifecycle_stage === 'activating') {
       return 'stalled'
@@ -41,22 +42,24 @@ export function computeEngagementState(inputs: EngagementInputs): ParticipantSta
   const now = new Date()
   const daysSinceActivity = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
 
-  // Active: activity in last 7-14 days
-  if (daysSinceActivity <= 14 && event_frequency_last_30d >= 3) {
+  if (
+    daysSinceActivity <= thresholds.active_days_threshold &&
+    event_frequency_last_30d >= thresholds.active_min_event_frequency_30d
+  ) {
     return 'active'
   }
 
-  // At Risk: declining activity trend
-  if (daysSinceActivity <= 30 && event_frequency_last_30d < 3) {
+  if (
+    daysSinceActivity <= thresholds.at_risk_days_threshold &&
+    event_frequency_last_30d < thresholds.active_min_event_frequency_30d
+  ) {
     return 'at_risk'
   }
 
-  // Stalled: no activity past threshold
-  if (daysSinceActivity > 30 && lifecycle_stage !== 'exited') {
+  if (daysSinceActivity > thresholds.at_risk_days_threshold) {
     return 'stalled'
   }
 
-  // Default based on lifecycle stage
   if (lifecycle_stage === 'producing' && onboarding_completed) {
     return 'active'
   }
@@ -69,17 +72,15 @@ export function computeEngagementState(inputs: EngagementInputs): ParticipantSta
 }
 
 /**
- * Apply engagement state computation to a participant
- * TODO: This will be called server-side with full event data
+ * Async wrapper that loads the active threshold version from DB.
  */
-export function computeParticipantStatus(participant: Participant): ParticipantStatus {
-  // For now, if status is already computed, use it
-  // In production, this will recompute from raw event data
-  return participant.status
+export async function computeEngagementState(
+  inputs: EngagementInputs
+): Promise<ParticipantStatus> {
+  const thresholds = await getActiveEngagementConfig()
+  return computeEngagementStateWith(inputs, thresholds)
 }
 
-
-
-
-
-
+export function computeParticipantStatus(participant: Participant): ParticipantStatus {
+  return participant.status
+}

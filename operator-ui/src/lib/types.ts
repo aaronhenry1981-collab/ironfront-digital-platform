@@ -14,7 +14,7 @@ export interface Participant {
   role: ParticipantRole
   status: ParticipantStatus
   lifecycle_stage: LifecycleStage
-  last_activity_at: string // ISO timestamp
+  last_activity_at: string | null // ISO timestamp; null when no activity yet
   created_at: string // ISO timestamp
   // Optional display fields (not hierarchy)
   display_name?: string

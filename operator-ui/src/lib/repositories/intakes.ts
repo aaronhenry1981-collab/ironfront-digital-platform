@@ -4,6 +4,8 @@
 
 import { db } from '../db'
 import { IntakeIntent, IntakeStatus } from '../intake-routing'
+import { recordIntakeOutcome, isIntakeTerminal } from '../outcome-tracker'
+import { recordTouchOutcomes } from '../touch-outcome-tracker'
 
 export interface Intake {
   id: string
@@ -137,6 +139,21 @@ export const intakesRepo = {
       },
       data: updateData,
     })
+
+    // Close the feedback loop: if this transition is terminal, record
+    // outcomes on recommendations AND on touches that targeted this intake.
+    if (isIntakeTerminal(status) && !isIntakeTerminal(previousStatus || '')) {
+      try {
+        await recordIntakeOutcome(orgId, intakeId, status)
+      } catch (e) {
+        console.error('Failed to record intake outcome (non-fatal):', e)
+      }
+      try {
+        await recordTouchOutcomes(orgId, intakeId, status)
+      } catch (e) {
+        console.error('Failed to record touch outcomes (non-fatal):', e)
+      }
+    }
 
     return previousStatus
   },
