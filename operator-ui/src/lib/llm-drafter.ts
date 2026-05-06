@@ -1,5 +1,5 @@
 /**
- * LLM-powered next-touch drafter using Claude Opus 4.7.
+ * LLM-powered next-touch drafter using Claude.
  *
  * Inputs: a fully-built ConversationContext (intake + thread + active
  * recommendations + ranked templates).
@@ -11,6 +11,11 @@
  * given a multi-turn thread genuinely benefits from reasoning. Falls back
  * gracefully when ANTHROPIC_API_KEY is unset — callers can still use the
  * rule-based template ranking from template-engine.ts.
+ *
+ * Model is env-var configurable. Default is claude-sonnet-4-6 (cheaper,
+ * great quality for outreach drafting). To upgrade later — when revenue
+ * justifies the higher cost — set CLAUDE_MODEL=claude-opus-4-7. No code
+ * change needed.
  */
 
 import Anthropic from '@anthropic-ai/sdk'
@@ -109,8 +114,11 @@ export async function draftNextTouch(
 
   // Stream so high adaptive-thinking budgets don't blow past the SDK's
   // per-chunk read timeout. .finalMessage() collects the complete Message.
+  // Default to Sonnet 4.6 for cost efficiency; flip to claude-opus-4-7 via
+  // env var when revenue justifies the upgrade.
+  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6'
   const stream = c.messages.stream({
-    model: 'claude-opus-4-7',
+    model,
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
     system: [
@@ -123,6 +131,7 @@ export async function draftNextTouch(
     messages: [{ role: 'user', content: userMessage }],
     output_config: {
       format: { type: 'json_schema', schema: RESPONSE_SCHEMA },
+      effort: 'medium',
     },
   })
 
