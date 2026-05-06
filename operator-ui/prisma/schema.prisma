@@ -170,12 +170,26 @@ model Intervention {
 model Recommendation {
   id              String    @id @default(uuid()) @db.Uuid
   org_id          String    @db.Uuid
-  target_type     String    @db.Text // 'node', 'segment'
+  target_type     String    @db.Text // 'node', 'segment', 'intake'
   target_id       String    @db.Uuid
   suggested_action String   @db.Text
   reason          String    @db.Text
-  confidence      Int       @db.SmallInt
-  status          String    @db.Text // 'active', 'applied', 'dismissed'
+  confidence      Int       @db.SmallInt // 0-100
+  status          String    @db.Text // 'active', 'applied', 'dismissed', 'expired'
+  // Provenance: which generator produced this and at what version.
+  // Lets us A/B newer generators against older ones using outcome data.
+  generator           String?   @db.Text
+  generator_version   Int?      @db.SmallInt
+  // Feedback loop fields - filled in when an operator acts on the recommendation.
+  applied_by_user_id    String?   @db.Uuid
+  applied_at            DateTime? @db.Timestamptz(6)
+  dismissed_by_user_id  String?   @db.Uuid
+  dismissed_at          DateTime? @db.Timestamptz(6)
+  dismissal_reason      String?   @db.Text
+  // Outcome tracking - filled in by outcome-tracker once the target reaches
+  // a terminal state (e.g. intake qualified/lost). Drives confidence calibration.
+  outcome             String?   @db.Text // 'successful', 'unsuccessful', 'unrelated'
+  outcome_recorded_at DateTime? @db.Timestamptz(6)
   created_at      DateTime  @default(now()) @db.Timestamptz(6)
   updated_at      DateTime  @updatedAt @db.Timestamptz(6)
 
@@ -183,7 +197,24 @@ model Recommendation {
 
   @@index([org_id, status, created_at])
   @@index([org_id, target_type, target_id])
+  @@index([generator, generator_version, outcome])
   @@map("recommendations")
+}
+
+// Versioned configuration for the engagement-state engine. Letting these
+// thresholds live in DB (with multiple versions, one active) means we can
+// tune them without redeploying and A/B test new versions.
+model EngagementConfig {
+  id                                String   @id @default(uuid()) @db.Uuid
+  version                           Int      @unique
+  active                            Boolean  @default(false)
+  active_days_threshold             Int      // last_activity within N days = active
+  at_risk_days_threshold            Int      // last_activity within N days = at_risk
+  active_min_event_frequency_30d    Int      // min events in 30d to count as active
+  description                       String?  @db.Text
+  created_at                        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("engagement_configs")
 }
 
 model Lead {

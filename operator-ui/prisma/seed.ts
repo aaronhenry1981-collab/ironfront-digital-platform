@@ -247,6 +247,22 @@ async function main() {
 
   console.log(`Created ${sampleIntakes.length} sample intakes`)
 
+  // Engagement-state thresholds (versioned, swappable without redeploy)
+  await prisma.engagementConfig.upsert({
+    where: { version: 1 },
+    update: {},
+    create: {
+      version: 1,
+      active: true,
+      active_days_threshold: 14,
+      at_risk_days_threshold: 30,
+      active_min_event_frequency_30d: 3,
+      description: 'Initial config - matches v0 hardcoded thresholds',
+    },
+  })
+
+  console.log('Seeded engagement_configs v1')
+
   console.log('✅ Seeding complete!')
 }
 
