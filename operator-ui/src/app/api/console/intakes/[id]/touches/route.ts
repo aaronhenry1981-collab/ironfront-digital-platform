@@ -16,6 +16,7 @@ import { db } from '@/lib/db'
 import { resolveOrgContext, getCurrentUser } from '@/lib/auth'
 import { eventsRepo } from '@/lib/repositories/events'
 import { renderTemplate } from '@/lib/template-engine'
+import { sendEmail, buildReplyToForIntake, isEmailConfigured } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,6 +107,40 @@ export async function POST(
       return NextResponse.json({ error: 'body is required' }, { status: 400 })
     }
 
+    // For outbound emails, attempt actual delivery via SES. We send BEFORE
+    // creating the touch row so a delivery failure doesn't leave a phantom
+    // "sent" record. Operators see the error and can retry.
+    let emailMessageId: string | null = null
+    let emailDeliveryError: string | null = null
+    const shouldDeliver =
+      direction === 'outbound' && channel === 'email' && body.deliver !== false
+
+    if (shouldDeliver) {
+      if (!isEmailConfigured()) {
+        return NextResponse.json(
+          {
+            error:
+              'Email provider not configured. Set AWS_REGION + AWS_SES_FROM_EMAIL, ' +
+              'or pass deliver:false to log the touch without sending.',
+          },
+          { status: 503 }
+        )
+      }
+      const result = await sendEmail({
+        to: intake.email,
+        subject: renderedSubject || '(no subject)',
+        text: touchBody,
+        replyTo: buildReplyToForIntake(intake.id) || undefined,
+      })
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: `Failed to send email: ${result.error}` },
+          { status: 502 }
+        )
+      }
+      emailMessageId = result.message_id || null
+    }
+
     const touch = await db.touch.create({
       data: {
         org_id: orgId,
@@ -143,6 +178,8 @@ export async function POST(
         channel,
         direction,
         template_id: templateId,
+        email_message_id: emailMessageId,
+        delivered: shouldDeliver,
       },
     })
 

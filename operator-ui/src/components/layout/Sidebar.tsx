@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const navItems = [
   { path: '/console/intake', label: 'Intake Board' },
+  { path: '/console/templates', label: 'Templates' },
   { path: '/console/organization', label: 'Organization Live View' },
   { path: '/console/segments', label: 'Segments' },
   { path: '/console/interventions', label: 'Interventions' },
