@@ -248,12 +248,67 @@ model Intake {
   last_activity_at  DateTime? @db.Timestamptz(6)
   notes             String?   @db.Text
 
-  org            Org?  @relation(fields: [org_id], references: [id], onDelete: SetNull)
-  assigned_user  User? @relation(fields: [assigned_user_id], references: [id], onDelete: SetNull)
+  org            Org?    @relation(fields: [org_id], references: [id], onDelete: SetNull)
+  assigned_user  User?   @relation(fields: [assigned_user_id], references: [id], onDelete: SetNull)
+  touches        Touch[]
 
   @@index([intent, status, created_at])
   @@index([assigned_user_id, status])
   @@index([created_at])
   @@map("intakes")
+}
+
+// A single operator <-> intake interaction. The conversation thread for
+// an intake is the ordered sequence of its touches. Inbound touches
+// (replies from the lead) get logged here too so the full context is
+// in one place.
+model Touch {
+  id                  String    @id @default(uuid()) @db.Uuid
+  org_id              String    @db.Uuid
+  intake_id           String    @db.Uuid
+  operator_user_id    String?   @db.Uuid
+  channel             String    @db.Text   // 'email' | 'sms' | 'call' | 'meeting' | 'note'
+  direction           String    @db.Text   // 'outbound' | 'inbound'
+  subject             String?   @db.Text
+  body                String    @db.Text
+  template_id         String?   @db.Uuid
+  context_summary     String?   @db.Text   // running summary for next operator's prep
+  // Outcome attribution: filled by touch-outcome-tracker when the parent
+  // intake reaches a terminal state. Drives template confidence calibration.
+  outcome             String?   @db.Text   // 'successful' | 'unsuccessful' | 'unrelated'
+  outcome_recorded_at DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+
+  intake   Intake            @relation(fields: [intake_id], references: [id], onDelete: Cascade)
+  template OutreachTemplate? @relation(fields: [template_id], references: [id], onDelete: SetNull)
+
+  @@index([org_id, intake_id, created_at])
+  @@index([template_id, outcome])
+  @@map("touches")
+}
+
+// Outreach templates. Same calibration pattern as recommendation
+// generators - declared base_confidence gets blended with observed
+// success rate from outcome data as the template accumulates touches.
+// Versioned so a tweaked subject line can be A/B'd against the original.
+model OutreachTemplate {
+  id                String    @id @default(uuid()) @db.Uuid
+  org_id            String    @db.Uuid
+  name              String    @db.Text
+  channel           String    @db.Text
+  subject_template  String?   @db.Text
+  body_template     String    @db.Text
+  intent_filter     String?   @db.Text   // null = matches any intent
+  status_filter     String?   @db.Text   // null = matches any intake status
+  version           Int       @db.SmallInt @default(1)
+  base_confidence   Int       @db.SmallInt @default(50)
+  created_by_user_id String?  @db.Uuid
+  archived_at       DateTime? @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  touches Touch[]
+
+  @@index([org_id, archived_at, intent_filter, status_filter])
+  @@map("outreach_templates")
 }
 
